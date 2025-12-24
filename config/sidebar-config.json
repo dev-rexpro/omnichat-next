@@ -1,0 +1,58 @@
+{
+    "google": {
+        "showThinking": true,
+        "showTools": true,
+        "showAdvancedSettings": true,
+        "showSystemInstruction": true,
+        "showTemperature": true,
+        "showMediaResolution": true
+    },
+    "openai": {
+        "showThinking": false,
+        "showTools": true,
+        "showAdvancedSettings": true,
+        "showSystemInstruction": true,
+        "showTemperature": true,
+        "showMediaResolution": false
+    },
+    "anthropic": {
+        "showThinking": false,
+        "showTools": true,
+        "showAdvancedSettings": true,
+        "showSystemInstruction": true,
+        "showTemperature": true,
+        "showMediaResolution": false
+    },
+    "mistral": {
+        "showThinking": false,
+        "showTools": true,
+        "showAdvancedSettings": true,
+        "showSystemInstruction": true,
+        "showTemperature": true,
+        "showMediaResolution": false
+    },
+    "ollama": {
+        "showThinking": false,
+        "showTools": false,
+        "showAdvancedSettings": true,
+        "showSystemInstruction": true,
+        "showTemperature": true,
+        "showMediaResolution": false
+    },
+    "lm-studio": {
+        "showThinking": false,
+        "showTools": false,
+        "showAdvancedSettings": true,
+        "showSystemInstruction": true,
+        "showTemperature": true,
+        "showMediaResolution": false
+    },
+    "default": {
+        "showThinking": false,
+        "showTools": true,
+        "showAdvancedSettings": true,
+        "showSystemInstruction": true,
+        "showTemperature": true,
+        "showMediaResolution": false
+    }
+}
