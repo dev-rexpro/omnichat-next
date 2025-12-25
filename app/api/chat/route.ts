@@ -1,6 +1,124 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+async function handleDeepResearch(messages: any[], apiKey: string) {
+    const lastMessage = messages[messages.length - 1];
+    const input = lastMessage.content; // Note: Attachments handling omitted for preview simplification
+
+    try {
+        const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions?alt=sse", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": apiKey
+            },
+            body: JSON.stringify({
+                input: input,
+                agent: "deep-research-pro-preview-12-2025",
+                background: true,
+                stream: true,
+                agent_config: {
+                    type: "deep-research",
+                    thinking_summaries: "auto"
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Deep Research API Error: ${response.status} ${errorText}`);
+        }
+
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
+        const reader = response.body?.getReader();
+
+        const customStream = new ReadableStream({
+            async start(controller) {
+                if (!reader) {
+                    controller.close();
+                    return;
+                }
+
+                try {
+                    let buffer = "";
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || ""; // Keep incomplete line
+
+                        let currentEvent = null;
+
+                        for (const line of lines) {
+                            if (line.startsWith('event: ')) {
+                                currentEvent = line.slice(7).trim();
+                            } else if (line.startsWith('data: ')) {
+                                const dataStr = line.slice(6).trim();
+                                if (!dataStr) continue;
+
+                                try {
+                                    const data = JSON.parse(dataStr);
+
+                                    let chunkText = "";
+                                    let reasoningText = "";
+
+                                    // Map Interactions API events to frontend format
+                                    if (currentEvent === 'content.delta') {
+                                        if (data.delta?.type === 'text') {
+                                            chunkText = data.delta.text;
+                                        } else if (data.delta?.type === 'thought_summary') {
+                                            // Format thoughts nicely: "Thought: ..."
+                                            // Or send as reasoning_content if you want it in the thinking block
+                                            reasoningText = `\nThought: ${data.delta.content.text}\n`;
+                                        }
+                                    }
+
+                                    if (chunkText || reasoningText) {
+                                        const output = JSON.stringify({
+                                            choices: [{
+                                                delta: {
+                                                    content: chunkText,
+                                                    reasoning_content: reasoningText || undefined
+                                                },
+                                                index: 0,
+                                                finish_reason: null,
+                                            }],
+                                        });
+                                        controller.enqueue(encoder.encode(`data: ${output}\n\n`));
+                                    }
+                                } catch (e) {
+                                    // Ignore parsing errors for non-JSON data lines
+                                }
+                            }
+                        }
+                    }
+                    controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                    controller.close();
+                } catch (error) {
+                    controller.error(error);
+                }
+            },
+        });
+
+        return new Response(customStream, {
+            headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+            },
+        });
+
+    } catch (error: any) {
+        console.error('Deep Research Error:', error);
+        return NextResponse.json({
+            error: error.message || 'Deep Research Failed'
+        }, { status: 500 });
+    }
+}
+
 export async function POST(req: Request) {
     try {
         const { messages, settings } = await req.json();
@@ -14,16 +132,40 @@ export async function POST(req: Request) {
             }, { status: 400 });
         }
 
+        // Branching for Deep Research
+        if (settings.tools?.deepResearch) {
+            return await handleDeepResearch(messages, apiKey);
+        }
+
         // Initialize Google Generative AI
         const genAI = new GoogleGenerativeAI(apiKey);
 
         // Tools configuration
         const tools: any[] = [];
-        if (settings.tools?.googleSearch) {
-            tools.push({ googleSearchRetrieval: {} });
+
+        // Determine if Google Search Grounding should be enabled
+        // User feedback suggests URL Context works best when Grounding is also active
+        // so we enable it if either Google Search OR URL Context is requested.
+        const enableGoogleSearch = settings.tools?.googleSearch || settings.tools?.urlContext;
+
+        if (enableGoogleSearch) {
+            // Use googleSearchRetrieval for Gemini 1.5 models (legacy)
+            if (model.includes("1.5")) {
+                tools.push({ googleSearchRetrieval: {} });
+            } else {
+                // Use googleSearch for Gemini 2.0 and later
+                tools.push({ googleSearch: {} });
+            }
         }
+
         if (settings.tools?.codeExecution) {
             tools.push({ codeExecution: {} });
+        }
+
+        if (settings.tools?.urlContext) {
+            // Add URL Context tool - using snake_case to match REST API
+            // @ts-ignore
+            tools.push({ url_context: {} });
         }
 
         // Thinking configuration
@@ -141,8 +283,17 @@ export async function POST(req: Request) {
         const customStream = new ReadableStream({
             async start(controller) {
                 try {
+                    let groundingMetadata: any = null;
+
                     for await (const chunk of result.stream) {
-                        const parts = (chunk as any).candidates?.[0]?.content?.parts || [];
+                        const candidate = (chunk as any).candidates?.[0];
+                        const parts = candidate?.content?.parts || [];
+
+                        // Capture grounding metadata if present (usually in the first or last chunk)
+                        if (candidate?.groundingMetadata) {
+                            groundingMetadata = candidate.groundingMetadata;
+                        }
+
                         let chunkText = "";
                         let reasoningText = "";
 
@@ -170,6 +321,15 @@ export async function POST(req: Request) {
                             controller.enqueue(encoder.encode(`data: ${data}\n\n`));
                         }
                     }
+
+                    // Send grounding metadata as a separate event if captured
+                    if (groundingMetadata) {
+                        const metaData = JSON.stringify({
+                            groundingMetadata: groundingMetadata
+                        });
+                        controller.enqueue(encoder.encode(`data: ${metaData}\n\n`));
+                    }
+
                     controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                     controller.close();
                 } catch (error) {

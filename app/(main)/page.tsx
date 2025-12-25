@@ -140,8 +140,18 @@ export default function ChatPage() {
 
             try {
               const json = JSON.parse(data)
-              const content = json.choices[0]?.delta?.content || ""
-              const reasoning = json.choices[0]?.delta?.reasoning_content || ""
+
+              // Handle metadata updates (Grounding or URL Context)
+              if (json.groundingMetadata || json.urlContextMetadata) {
+                await updateMessage(assistantMessageId, {
+                  groundingMetadata: json.groundingMetadata,
+                  urlContextMetadata: json.urlContextMetadata
+                })
+                continue
+              }
+
+              const content = json.choices?.[0]?.delta?.content || ""
+              const reasoning = json.choices?.[0]?.delta?.reasoning_content || ""
 
               if (content || reasoning) {
                 assistantContent += content

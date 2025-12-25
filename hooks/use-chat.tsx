@@ -16,7 +16,7 @@ interface ChatContextType {
   // Message Management
   messages: Message[] | undefined;
   addMessage: (message: Omit<Message, 'id' | 'createdAt' | 'chatId' | 'userId'>) => Promise<number>;
-  updateMessage: (id: number, updates: Partial<Pick<Message, 'content' | 'reasoning_content' | 'attachments'>>) => Promise<void>;
+  updateMessage: (id: number, updates: Partial<Pick<Message, 'content' | 'reasoning_content' | 'attachments' | 'groundingMetadata' | 'urlContextMetadata'>>) => Promise<void>;
   deleteMessage: (id: number) => Promise<void>;
 
   // Data Management
@@ -151,7 +151,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return id;
   }, [createChat, user]);
 
-  const updateMessage = useCallback(async (id: number, updates: Partial<Pick<Message, 'content' | 'reasoning_content'>>) => {
+  const updateMessage = useCallback(async (id: number, updates: Partial<Pick<Message, 'content' | 'reasoning_content' | 'attachments' | 'groundingMetadata'>>) => {
     await db.messages.update(id, updates);
   }, []);
 

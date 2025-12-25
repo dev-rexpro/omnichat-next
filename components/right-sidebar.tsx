@@ -277,15 +277,18 @@ export function RightSidebar({
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[13px] font-medium">Google Search</span>
+                    <span className="text-[13px] font-medium">Grounding with Google Search</span>
                     <Switch
                       checked={settings.tools.googleSearch}
                       onCheckedChange={(val) => {
-                        handleToolChange("googleSearch", val);
-                        if (val) {
-                          handleToolChange("structuredOutput", false);
-                          handleToolChange("functionCalling", false);
-                        }
+                        updateSettings({
+                          tools: {
+                            ...settings.tools,
+                            googleSearch: val,
+                            structuredOutput: val ? false : settings.tools.structuredOutput,
+                            functionCalling: val ? false : settings.tools.functionCalling,
+                          },
+                        });
                       }}
                       className="scale-90"
                     />

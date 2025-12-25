@@ -13,7 +13,7 @@ interface SettingsContextType {
 }
 
 const defaultSettings: Settings = {
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     provider: "google",
     systemInstruction: "",
     temperature: 1,
@@ -27,6 +27,11 @@ const defaultSettings: Settings = {
         functionCalling: false,
         googleSearch: false,
         urlContext: false,
+
+        canvas: false,
+        deepResearch: false,
+        images: false,
+        videos: false,
     },
     expandThinking: false,
     excludeThinkingOnSubmit: true,

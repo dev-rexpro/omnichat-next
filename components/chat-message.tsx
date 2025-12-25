@@ -23,6 +23,9 @@ import { cn } from "@/lib/utils"
 import MarkdownDisplay from "./markdown-display"
 import { useSettings } from "@/hooks/use-settings"
 import { useTextToSpeech } from "@/hooks/use-text-to-speech"
+import { GroundingDisplay } from "./grounding-display"
+import { UrlContextDisplay } from "@/components/url-context-display"
+import { addCitations } from "@/lib/grounding-utils"
 
 
 
@@ -207,7 +210,27 @@ export const ChatMessage = memo(function ChatMessage({
                             (isUser ? settings.displayUserMessagesRaw : settings.displayModelMessagesRaw) ? (
                                 <pre className="whitespace-pre-wrap font-sans text-[14px]">{contentText}</pre>
                             ) : (
-                                <MarkdownDisplay content={contentText} />
+                                <MarkdownDisplay content={(() => {
+                                    // Process citations using grounding metadata
+                                    if (message.groundingMetadata?.groundingSupports) {
+                                        return addCitations(contentText, message.groundingMetadata);
+                                    }
+
+                                    // Fallback if support indices are missing but chunks exist (regex replacement)
+                                    // This handles cases where text MIGHT have brackets but no precise indices
+                                    if (message.groundingMetadata?.groundingChunks) {
+                                        const chunks = message.groundingMetadata.groundingChunks;
+                                        return contentText.replace(/\[(\d+)\]/g, (match, n) => {
+                                            const index = parseInt(n) - 1;
+                                            if (chunks[index]?.web?.uri) {
+                                                return `[[${n}]](${chunks[index].web.uri})`;
+                                            }
+                                            return match;
+                                        });
+                                    }
+
+                                    return contentText;
+                                })()} />
                             )
                         ) : (
                             isAssistant && isProcessing && (
@@ -219,6 +242,16 @@ export const ChatMessage = memo(function ChatMessage({
                             )
                         )}
                     </div>
+
+                    {/* Grounding Display (Sources & Suggestions) */}
+                    {isAssistant && message.groundingMetadata && (
+                        <GroundingDisplay metadata={message.groundingMetadata} />
+                    )}
+
+                    {/* URL Context Display */}
+                    {isAssistant && message.urlContextMetadata && (
+                        <UrlContextDisplay metadata={message.urlContextMetadata} />
+                    )}
                 </div>
 
                 {/* Action Buttons */}

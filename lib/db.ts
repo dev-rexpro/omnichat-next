@@ -14,6 +14,8 @@ export interface Message {
     data: string; // Base64
   }>;
   model?: string;
+  groundingMetadata?: any;
+  urlContextMetadata?: any;
   createdAt: Date;
 }
 

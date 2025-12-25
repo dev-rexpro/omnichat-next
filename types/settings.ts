@@ -14,6 +14,12 @@ export interface Settings {
     functionCalling: boolean;
     googleSearch: boolean;
     urlContext: boolean;
+
+    // UI Tools
+    canvas: boolean;
+    deepResearch: boolean;
+    images: boolean;
+    videos: boolean;
   };
   expandThinking: boolean;
   excludeThinkingOnSubmit: boolean;

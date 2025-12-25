@@ -11,19 +11,28 @@ import {
   Square,
   X,
   FileIcon,
-  ImageIcon
+  ImageIcon,
+  TerminalSquare,
+  Microscope,
+  Image as ImageIconLucide,
+  Video
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle, DrawerHeader, DrawerDescription } from "@/components/ui/drawer"
 import { cn } from "@/lib/utils"
 import { useChat } from "@/hooks/use-chat"
 import { useSettings } from "@/hooks/use-settings"
+import { useMediaQuery } from "@/hooks/use-media-query"
 import type { Message } from "@/lib/db"
 import { MessageActions } from "@/components/message-actions"
 import { UserMessageActions } from "@/components/user-message-actions"
 import MarkdownDisplay from "@/components/markdown-display"
 import { ChatMessage } from "@/components/chat-message"
+
+
+
 
 // New Hooks
 import { useChatScroll } from "@/hooks/use-chat-scroll"
@@ -56,7 +65,23 @@ export function ChatArea({
   onEdit
 }: ChatAreaProps) {
   const { messages, deleteMessage } = useChat();
-  const { settings } = useSettings();
+  const { settings, updateSettings } = useSettings();
+  const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)")
+
+  const toggleTool = (tool: keyof typeof settings.tools) => {
+    updateSettings({
+      tools: {
+        ...settings.tools,
+        [tool]: !settings.tools[tool]
+      }
+    });
+  };
+
+  const isCanvasOpen = settings.tools.canvas;
+  const isDeepResearchActive = settings.tools.deepResearch;
+  const isImagesActive = settings.tools.images;
+  const isVideosActive = settings.tools.videos;
 
   // Refs
   const chatScrollRef = useRef<HTMLDivElement>(null)
@@ -146,7 +171,7 @@ export function ChatArea({
             </div>
           </div>
         ) : (
-          <div className="w-full max-w-[880px] mx-auto px-4 py-6 relative z-10">
+          <div className="w-full max-w-[880px] mx-auto px-2 md:px-4 py-6 relative z-10">
             <div className="space-y-8">
               {messages.map((msg: Message) => (
                 <ChatMessage
@@ -178,7 +203,7 @@ export function ChatArea({
         className="w-full z-20 bg-background border-t border-transparent pt-0 pb-[6px] px-2 mb-[1px] mx-[1px] rounded-b-xl self-center relative"
         style={{ width: "calc(100% - 2px)" }}
       >
-        <div className="max-w-[880px] mx-auto px-4 relative">
+        <div className="max-w-[880px] mx-auto px-2 md:px-4 relative">
           {/* Scroll to Bottom Button */}
           <div
             className={cn(
@@ -257,18 +282,105 @@ export function ChatArea({
                     </TooltipTrigger>
                     <TooltipContent><p>Attach</p></TooltipContent>
                   </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+
+                  <div className="relative flex items-center">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setIsToolsMenuOpen(!isToolsMenuOpen)}
+                          className={cn(
+                            "p-2 rounded-[10px] hover:bg-accent h-auto w-auto transition-colors relative",
+                            (isCanvasOpen || isDeepResearchActive || isImagesActive || isToolsMenuOpen)
+                              ? "text-primary bg-primary/10"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          <Settings2 className="w-4 h-4" />
+                          {(isCanvasOpen || isDeepResearchActive || isImagesActive) && (
+                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-background" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Tools</p></TooltipContent>
+                    </Tooltip>
+
+                    {/* Desktop Slide-out Menu */}
+                    <div
+                      className={cn(
+                        "hidden md:flex absolute left-full ml-2 items-center gap-2 transition-all duration-200 ease-out origin-left z-20",
+                        isToolsMenuOpen ? "opacity-100 scale-100 translate-x-0" : "opacity-0 scale-95 -translate-x-2 pointer-events-none"
+                      )}
+                    >
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className="p-2 rounded-[10px] hover:bg-accent text-muted-foreground hover:text-foreground h-auto w-auto"
+                        variant="outline"
+                        size="sm"
+                        className={cn("h-8 gap-2 bg-background transition-colors", isCanvasOpen && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground border-transparent")}
+                        onClick={() => toggleTool('canvas')}
                       >
-                        <Settings2 className="w-4 h-4" />
+                        <TerminalSquare className="w-4 h-4" />
+                        <span>Canvas</span>
                       </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Tools</p></TooltipContent>
-                  </Tooltip>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn("h-8 gap-2 bg-background transition-colors", isDeepResearchActive && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground border-transparent")}
+                        onClick={() => toggleTool('deepResearch')}
+                      >
+                        <Microscope className="w-4 h-4" />
+                        <span>Deep Research</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn("h-8 gap-2 bg-background transition-colors", isImagesActive && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground border-transparent")}
+                        onClick={() => toggleTool('images')}
+                      >
+                        <ImageIconLucide className="w-4 h-4" />
+                        <span>Images</span>
+                      </Button>
+                    </div>
+
+                    {/* Mobile Bottom Sheet (Drawer) */}
+                    <Drawer open={isMobile && isToolsMenuOpen} onOpenChange={setIsToolsMenuOpen}>
+                      <DrawerContent>
+                        <DrawerHeader>
+                          <DrawerTitle>Power Tools</DrawerTitle>
+                          <DrawerDescription>Select tools to enhance your chat capability.</DrawerDescription>
+                        </DrawerHeader>
+                        <div className="p-4 flex flex-col gap-3">
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            className={cn("w-full justify-start gap-4 h-12 text-base", isCanvasOpen && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground border-transparent")}
+                            onClick={() => { toggleTool('canvas'); setIsToolsMenuOpen(false); }}
+                          >
+                            <TerminalSquare className="w-5 h-5" />
+                            <span>Canvas</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            className={cn("w-full justify-start gap-4 h-12 text-base", isDeepResearchActive && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground border-transparent")}
+                            onClick={() => { toggleTool('deepResearch'); setIsToolsMenuOpen(false); }}
+                          >
+                            <Microscope className="w-5 h-5" />
+                            <span>Deep Research</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            className={cn("w-full justify-start gap-4 h-12 text-base", isImagesActive && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground border-transparent")}
+                            onClick={() => { toggleTool('images'); setIsToolsMenuOpen(false); }}
+                          >
+                            <ImageIconLucide className="w-5 h-5" />
+                            <span>Images</span>
+                          </Button>
+                        </div>
+                      </DrawerContent>
+                    </Drawer>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">

@@ -138,6 +138,14 @@ const MarkdownDisplay = memo(function MarkdownDisplay({ content }: { content: an
                     blockquote: ({ children, ...props }) => (
                         <blockquote className="border-l-3 border-border pl-4 text-muted-foreground my-2" {...props}>{children}</blockquote>
                     ),
+                    a: ({ node, ...props }) => (
+                        <a
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary underline underline-offset-4 hover:opacity-80 transition-opacity font-medium"
+                            {...props}
+                        />
+                    ),
                     code({ node, inline, className, children, ...props }: any) {
                         const match = /language-(\w+)/.exec(className || '')
                         const codeContent = String(children).replace(/\n$/, '')

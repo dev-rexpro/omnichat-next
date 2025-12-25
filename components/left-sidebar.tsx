@@ -5,6 +5,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useChat } from "@/hooks/use-chat"
 import { useAuth } from "@/hooks/use-auth"
+import { useSettings } from "@/hooks/use-settings"
 import {
   Plus,
   Search,
@@ -44,6 +45,7 @@ export function LeftSidebar({
   const router = useRouter()
   const { chats, currentChatId, setCurrentChatId, deleteChat, renameChat } = useChat()
   const { user, logout } = useAuth()
+  const { settings, updateSettings } = useSettings()
   const [openRecentMenu, setOpenRecentMenu] = useState<string | null>(null)
   const [chatIdToRename, setChatIdToRename] = useState<string | null>(null)
   const [chatIdToDelete, setChatIdToDelete] = useState<string | null>(null)
@@ -51,6 +53,18 @@ export function LeftSidebar({
   const handleNewChat = () => {
     setCurrentChatId(null)
     setHeaderTitle("New Chat")
+
+    // Reset all tools when starting a new chat
+    updateSettings({
+      tools: {
+        ...settings.tools,
+        canvas: false,
+        deepResearch: false,
+        images: false,
+        videos: false
+      }
+    })
+
     if (window.innerWidth < 768) {
       // logic to close sidebar could be passed via props if needed
     }
