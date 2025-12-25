@@ -125,13 +125,15 @@ export const useSpeechToText = ({
                 const { isFinal, length } = result;
                 if (length <= 0) continue;
                 const { transcript, confidence } = result[0];
-                const fullTranscript = [finalTranscriptRef.current, transcript].join(
-                    ' '
-                );
+                const fullTranscript = finalTranscriptRef.current
+                    ? [finalTranscriptRef.current, transcript].join(' ')
+                    : transcript;
                 setTranscript(fullTranscript);
                 onRecordRef.current?.(fullTranscript);
                 if (isFinal && confidence > 0) {
-                    finalTranscriptRef.current += transcript;
+                    finalTranscriptRef.current = finalTranscriptRef.current
+                        ? `${finalTranscriptRef.current} ${transcript}`
+                        : transcript;
                 }
             }
         };

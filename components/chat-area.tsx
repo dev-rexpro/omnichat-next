@@ -64,27 +64,33 @@ export function ChatArea({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Smart Scroll Hook
-  const { scrollImmediate, scrollToBottom } = useChatScroll(chatScrollRef);
+  const { scrollImmediate, scrollToBottom, showScrollButton } = useChatScroll(chatScrollRef);
 
   // Voice Input Hook
   const { isRecording, startRecording, stopRecording, transcript } = useSpeechToText({
     continuous: true,
     interimResults: true,
-    onRecord: (text) => {
-      // Optional: you can stick logic here if needed, but we use effect below
-    }
   });
+
+  const [inputBeforeVoice, setInputBeforeVoice] = useState("");
 
   // Effect: Sync Voice Transcript to Input
   useEffect(() => {
-    if (transcript) {
-      // Appending to existing input or replacing? 
-      // Typically replacing or appending with space. Let's append if not empty.
-      // But transcript keeps growing in current session. 
-      // Simple approach: set user input to transcript
-      setUserInput(transcript);
+    // Only update if we are actively recording and have a transcript
+    if (isRecording && transcript) {
+      const spacer = (inputBeforeVoice && !inputBeforeVoice.endsWith(' ')) ? " " : "";
+      setUserInput(inputBeforeVoice + spacer + transcript);
     }
-  }, [transcript, setUserInput]);
+  }, [transcript, isRecording, inputBeforeVoice, setUserInput]);
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      setInputBeforeVoice(userInput);
+      startRecording();
+    }
+  }
 
 
   // Effect: Auto-scroll on new messages
@@ -128,13 +134,7 @@ export function ChatArea({
     }
   }
 
-  const toggleRecording = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  }
+
 
   return (
     <main className="flex-1 flex flex-col min-w-0 bg-background border border-border rounded-xl relative transition-all duration-300 overflow-hidden">
@@ -172,11 +172,30 @@ export function ChatArea({
         <div className="h-4 flex-shrink-0"></div>
       </div>
 
+
+
       <div
         className="w-full z-20 bg-background border-t border-transparent pt-0 pb-[6px] px-2 mb-[1px] mx-[1px] rounded-b-xl self-center relative"
         style={{ width: "calc(100% - 2px)" }}
       >
-        <div className="max-w-[880px] mx-auto px-4">
+        <div className="max-w-[880px] mx-auto px-4 relative">
+          {/* Scroll to Bottom Button */}
+          <div
+            className={cn(
+              "absolute -top-12 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 transform",
+              showScrollButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+            )}
+          >
+            <Button
+              variant="secondary"
+              size="icon"
+              className="rounded-full shadow-md bg-background/80 backdrop-blur-sm border border-border hover:bg-background w-8 h-8"
+              onClick={() => scrollImmediate('smooth')}
+            >
+              <ArrowUp className="w-4 h-4 rotate-180 text-muted-foreground" />
+            </Button>
+          </div>
+
           <div className="gradient-focus-container shadow-sm transition-all">
             <div className={cn("gradient-focus-inner relative flex flex-col w-full p-0 border border-input bg-background", isRecording && "border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]")}>
 
@@ -258,7 +277,15 @@ export function ChatArea({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={onSend}
+                        onClick={() => {
+                          if (isProcessing) {
+                            stopGeneration();
+                          } else if (userInput.trim() || attachments.length > 0) {
+                            onSend();
+                          } else {
+                            toggleRecording();
+                          }
+                        }}
                         className={cn(
                           "h-8 w-8 rounded-[10px] transition-all duration-200",
                           isProcessing
@@ -273,7 +300,7 @@ export function ChatArea({
                         ) : (userInput.trim() || attachments.length > 0) ? (
                           <ArrowUp className="w-4 h-4" />
                         ) : (
-                          <Mic className={cn("w-4 h-4", isRecording ? "animate-pulse text-red-500" : "")} onClick={(e) => { e.stopPropagation(); toggleRecording(); }} />
+                          <Mic className={cn("w-4 h-4", isRecording ? "animate-pulse text-red-500" : "")} />
                         )}
                       </Button>
                     </TooltipTrigger>
