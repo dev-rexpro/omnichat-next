@@ -315,3 +315,11 @@ input[type="range"]::-webkit-slider-runnable-track {
   /* Fixed: removed hsl() wrapper */
   border-radius: 99px;
 }
+
+.function-call-box {
+  width: 98% !important;
+  max-width: 98% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  display: block !important;
+}

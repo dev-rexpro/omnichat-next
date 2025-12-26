@@ -119,6 +119,7 @@ export default function ChatPage() {
       const decoder = new TextDecoder()
       let assistantContent = ""
       let assistantReasoning = ""
+      let assistantFunctionCalls: any[] = []
 
       const assistantMessageId = await addMessage({
         role: "assistant",
@@ -152,14 +153,23 @@ export default function ChatPage() {
 
               const content = json.choices?.[0]?.delta?.content || ""
               const reasoning = json.choices?.[0]?.delta?.reasoning_content || ""
+              const functionCalls = json.choices?.[0]?.delta?.function_calls
 
-              if (content || reasoning) {
+              if (content || reasoning || functionCalls) {
                 assistantContent += content
                 assistantReasoning += reasoning
-                await updateMessage(assistantMessageId, {
+
+                const updates: any = {
                   content: assistantContent,
                   reasoning_content: assistantReasoning || undefined
-                })
+                }
+
+                if (functionCalls) {
+                  assistantFunctionCalls = [...assistantFunctionCalls, ...functionCalls]
+                  updates.functionCalls = assistantFunctionCalls
+                }
+
+                await updateMessage(assistantMessageId, updates)
               }
             } catch (e) {
             }
@@ -182,6 +192,124 @@ export default function ChatPage() {
       abortController.abort()
     }
     setIsProcessing(false)
+  }
+
+  const handleFunctionResponse = async (name: string, content: string) => {
+    if (isProcessing) return
+
+    setIsProcessing(true)
+
+    // Add function message
+    await addMessage({
+      role: "function", // @ts-ignore - DB type updated but TS might lag
+      name: name,
+      content: content
+    })
+
+    const controller = new AbortController()
+    setAbortController(controller)
+
+    try {
+      const dbMessages = messages || []
+      const chatHistory = dbMessages.map(m => ({
+        role: m.role,
+        content: m.content,
+        name: m.name,
+        attachments: m.attachments
+      }))
+
+      // Add current function response to history
+      chatHistory.push({
+        role: "function",
+        name: name,
+        content: content,
+        attachments: undefined
+      })
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: chatHistory,
+          settings: settings,
+        }),
+        signal: controller.signal,
+      })
+
+      if (!response.ok) {
+        throw new Error(response.statusText)
+      }
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let assistantContent = ""
+      let assistantReasoning = ""
+      let assistantFunctionCalls: any[] = []
+
+      const assistantMessageId = await addMessage({
+        role: "assistant",
+        content: "",
+        model: settings.model
+      })
+
+      while (true) {
+        const { done, value } = await (reader?.read() || { done: true, value: undefined })
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split("\n")
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6).trim()
+            if (data === "[DONE]") continue
+
+            try {
+              const json = JSON.parse(data)
+
+              if (json.groundingMetadata || json.urlContextMetadata) {
+                await updateMessage(assistantMessageId, {
+                  groundingMetadata: json.groundingMetadata,
+                  urlContextMetadata: json.urlContextMetadata
+                })
+                continue
+              }
+
+              const content = json.choices?.[0]?.delta?.content || ""
+              const reasoning = json.choices?.[0]?.delta?.reasoning_content || ""
+              const functionCalls = json.choices?.[0]?.delta?.function_calls
+
+              if (content || reasoning || functionCalls) {
+                assistantContent += content
+                assistantReasoning += reasoning
+
+                const updates: any = {
+                  content: assistantContent,
+                  reasoning_content: assistantReasoning || undefined
+                }
+
+                if (functionCalls) {
+                  assistantFunctionCalls = [...assistantFunctionCalls, ...functionCalls]
+                  updates.functionCalls = assistantFunctionCalls
+                }
+
+                await updateMessage(assistantMessageId, updates)
+              }
+            } catch (e) {
+            }
+          }
+        }
+      }
+
+    } catch (error: any) {
+      if (error.name !== "AbortError") {
+        console.error("Function Response Error:", error)
+        await addMessage({ role: "assistant", content: "Error processing function response." })
+      }
+    } finally {
+      setIsProcessing(false)
+      setAbortController(null)
+    }
   }
 
   const onRegenerate = async () => {
@@ -223,6 +351,7 @@ export default function ChatPage() {
       handleKeyDown={handleKeyDown}
       onRegenerate={onRegenerate}
       onEdit={onEdit}
+      onSendFunctionResponse={handleFunctionResponse}
     />
   )
 }

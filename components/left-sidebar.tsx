@@ -143,7 +143,7 @@ export function LeftSidebar({
             </div>
             <span
               className={cn(
-                "font-semibold text-[18px] tracking-tight transition-all duration-200 overflow-hidden ml-3",
+                "font-semibold text-[20px] tracking-tight transition-all duration-200 overflow-hidden ml-3",
                 isLeftOpen ? "opacity-100 w-auto" : "opacity-0 w-0"
               )}
             >

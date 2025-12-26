@@ -21,6 +21,7 @@ export interface Settings {
     images: boolean;
     videos: boolean;
   };
+  functionDeclarations: string;
   expandThinking: boolean;
   excludeThinkingOnSubmit: boolean;
   enablePythonInterpreter: boolean;

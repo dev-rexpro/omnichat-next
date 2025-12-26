@@ -162,6 +162,17 @@ export async function POST(req: Request) {
             tools.push({ codeExecution: {} });
         }
 
+        if (settings.tools?.functionCalling && settings.functionDeclarations) {
+            try {
+                const funcs = JSON.parse(settings.functionDeclarations);
+                if (Array.isArray(funcs) && funcs.length > 0) {
+                    tools.push({ functionDeclarations: funcs });
+                }
+            } catch (e) {
+                console.warn("Failed to parse function declarations:", e);
+            }
+        }
+
         if (settings.tools?.urlContext) {
             // Add URL Context tool - using snake_case to match REST API
             // @ts-ignore
@@ -204,6 +215,24 @@ export async function POST(req: Request) {
 
         // Format messages untuk Gemini SDK (alternating user/model)
         const history = messages.slice(0, -1).map((m: any) => {
+            if (m.role === 'function') {
+                let responseContent = {};
+                try {
+                    responseContent = JSON.parse(m.content);
+                } catch (e) {
+                    responseContent = { result: m.content };
+                }
+                return {
+                    role: 'function',
+                    parts: [{
+                        functionResponse: {
+                            name: m.name,
+                            response: responseContent
+                        }
+                    }]
+                };
+            }
+
             const parts: any[] = [];
 
             const isAssistant = m.role === 'assistant';
@@ -232,6 +261,18 @@ export async function POST(req: Request) {
                             }
                         });
                     }
+                });
+            }
+
+            // Include function calls in history
+            if (isAssistant && m.functionCalls && m.functionCalls.length > 0) {
+                m.functionCalls.forEach((call: any) => {
+                    parts.push({
+                        functionCall: {
+                            name: call.name,
+                            args: call.args
+                        }
+                    });
                 });
             }
 
@@ -296,22 +337,26 @@ export async function POST(req: Request) {
 
                         let chunkText = "";
                         let reasoningText = "";
+                        const functionCalls: any[] = [];
 
                         for (const part of parts) {
                             if ('thought' in part && (part as any).thought === true) {
                                 reasoningText += (part as any).text || "";
                             } else if ('text' in part) {
-                                chunkText += part.text;
+                                chunkText += (part as any).text;
+                            } else if ('functionCall' in part) {
+                                functionCalls.push((part as any).functionCall);
                             }
                         }
 
-                        if (chunkText || reasoningText) {
+                        if (chunkText || reasoningText || functionCalls.length > 0) {
                             const data = JSON.stringify({
                                 choices: [
                                     {
                                         delta: {
                                             content: chunkText,
-                                            reasoning_content: reasoningText || undefined
+                                            reasoning_content: reasoningText || undefined,
+                                            function_calls: functionCalls.length > 0 ? functionCalls : undefined
                                         },
                                         index: 0,
                                         finish_reason: null,

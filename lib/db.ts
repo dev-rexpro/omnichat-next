@@ -5,7 +5,7 @@ export interface Message {
   id?: number;
   chatId: string;
   userId: string;
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant' | 'system' | 'function';
   content: string;
   reasoning_content?: string;
   attachments?: Array<{
@@ -16,6 +16,8 @@ export interface Message {
   model?: string;
   groundingMetadata?: any;
   urlContextMetadata?: any;
+  functionCalls?: any[];
+  name?: string;
   createdAt: Date;
 }
 

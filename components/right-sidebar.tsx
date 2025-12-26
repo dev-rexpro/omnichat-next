@@ -6,7 +6,9 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  Edit2,
 } from "lucide-react"
+import { FunctionCallingDialog } from "@/components/function-calling-dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
@@ -68,6 +70,7 @@ export function RightSidebar({
 }: RightSidebarProps) {
   const { settings, updateSettings, resetSettings } = useSettings()
   const [toolsOpen, setToolsOpen] = useState(true)
+  const [isFunctionDialogOpen, setIsFunctionDialogOpen] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(true)
   const [resolutionDropdownOpen, setResolutionDropdownOpen] = useState(false)
 
@@ -269,12 +272,23 @@ export function RightSidebar({
 
                   <div className="flex items-center justify-between">
                     <span className="text-[13px] font-medium">Function calling</span>
-                    <Switch
-                      checked={settings.tools.functionCalling}
-                      onCheckedChange={(val) => handleToolChange("functionCalling", val)}
-                      disabled={settings.tools.googleSearch}
-                      className="scale-90"
-                    />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={() => setIsFunctionDialogOpen(true)}
+                        disabled={!settings.tools.functionCalling}
+                      >
+                        Edit
+                      </Button>
+                      <Switch
+                        checked={settings.tools.functionCalling}
+                        onCheckedChange={(val) => handleToolChange("functionCalling", val)}
+                        disabled={settings.tools.googleSearch}
+                        className="scale-90"
+                      />
+                    </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[13px] font-medium">Grounding with Google Search</span>
@@ -427,6 +441,12 @@ export function RightSidebar({
           <SettingsContent />
         </div>
       )}
+      <FunctionCallingDialog
+        open={isFunctionDialogOpen}
+        onOpenChange={setIsFunctionDialogOpen}
+        initialCode={settings.functionDeclarations}
+        onSave={(code) => updateSettings({ functionDeclarations: code })}
+      />
     </div>
   )
 }

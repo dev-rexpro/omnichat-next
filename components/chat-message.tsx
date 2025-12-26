@@ -26,6 +26,7 @@ import { useTextToSpeech } from "@/hooks/use-text-to-speech"
 import { GroundingDisplay } from "./grounding-display"
 import { UrlContextDisplay } from "@/components/url-context-display"
 import { addCitations } from "@/lib/grounding-utils"
+import { FunctionCallDisplay } from "@/components/function-call-display"
 
 
 
@@ -35,6 +36,7 @@ interface ChatMessageProps {
     onRegenerate?: () => void
     onEdit?: (id: number, content: string) => void
     isProcessing?: boolean
+    onSendFunctionResponse?: (name: string, content: string) => void
 }
 
 const ThinkingSection = memo(function ThinkingSection({ content, isThinking }: { content: string, isThinking?: boolean }) {
@@ -81,12 +83,14 @@ export const ChatMessage = memo(function ChatMessage({
     onDelete,
     onRegenerate,
     onEdit,
-    isProcessing
+    isProcessing,
+    onSendFunctionResponse
 }: ChatMessageProps) {
     const { settings } = useSettings()
     const [copied, setCopied] = useState(false)
     const isAssistant = message.role === "assistant"
     const isUser = message.role === "user"
+    const hasFunctionCalls = message.functionCalls && message.functionCalls.length > 0
 
     // Guaranteed string content
     const contentText = useMemo(() => {
@@ -148,13 +152,15 @@ export const ChatMessage = memo(function ChatMessage({
 
             <div className={cn(
                 "relative flex flex-col gap-2",
-                isUser ? "items-end max-w-[85%] sm:max-w-[75%]" : "items-start max-w-[98%]"
+                isUser
+                    ? "items-end max-w-[85%] sm:max-w-[75%]"
+                    : cn("items-start max-w-[98%]", hasFunctionCalls && "w-[98%]")
             )}>
                 <div className={cn(
                     "rounded-2xl transition-all duration-200 break-words",
                     isUser
                         ? "bg-secondary text-secondary-foreground px-5 py-3 rounded-tr-[2px]"
-                        : "w-full py-0 px-1 bg-transparent shadow-none"
+                        : "max-w-[98%] w-full py-0 px-1 bg-transparent shadow-none"
                 )}>
                     {/* Attachments */}
                     {message.attachments && message.attachments.length > 0 && (
@@ -251,6 +257,21 @@ export const ChatMessage = memo(function ChatMessage({
                     {/* URL Context Display */}
                     {isAssistant && message.urlContextMetadata && (
                         <UrlContextDisplay metadata={message.urlContextMetadata} />
+                    )}
+
+                    {/* Function Calls Display */}
+                    {isAssistant && message.functionCalls && (
+                        <div className="w-full flex flex-col gap-2 mt-2">
+                            {message.functionCalls.map((call, idx) => (
+                                <FunctionCallDisplay
+                                    key={idx}
+                                    functionCall={call}
+                                    functionResponse={message.functionResponses?.[idx]}
+                                    onSendResponse={onSendFunctionResponse ? (response) => onSendFunctionResponse(call.name, response) : undefined}
+                                    isExpanded={true}
+                                />
+                            ))}
+                        </div>
                     )}
                 </div>
 

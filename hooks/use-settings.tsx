@@ -33,6 +33,7 @@ const defaultSettings: Settings = {
         images: false,
         videos: false,
     },
+    functionDeclarations: "[]",
     expandThinking: false,
     excludeThinkingOnSubmit: true,
     enablePythonInterpreter: false,

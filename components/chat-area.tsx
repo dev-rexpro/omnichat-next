@@ -50,6 +50,7 @@ interface ChatAreaProps {
   handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>, attachments?: Array<{ name: string, type: string, data: string }>) => void
   onRegenerate: () => void
   onEdit: (id: number, content: string) => void
+  onSendFunctionResponse: (name: string, content: string) => void
 }
 
 export function ChatArea({
@@ -62,7 +63,8 @@ export function ChatArea({
   stopGeneration,
   handleKeyDown,
   onRegenerate,
-  onEdit
+  onEdit,
+  onSendFunctionResponse
 }: ChatAreaProps) {
   const { messages, deleteMessage } = useChat();
   const { settings, updateSettings } = useSettings();
@@ -173,16 +175,43 @@ export function ChatArea({
         ) : (
           <div className="w-full max-w-[880px] mx-auto px-2 md:px-4 py-6 relative z-10">
             <div className="space-y-8">
-              {messages.map((msg: Message) => (
-                <ChatMessage
-                  key={msg.id}
-                  message={msg}
-                  isProcessing={isProcessing && messages[messages.length - 1]?.id === msg.id}
-                  onDelete={deleteMessage}
-                  onRegenerate={onRegenerate}
-                  onEdit={onEdit}
-                />
-              ))}
+              {messages.map((msg: Message, index) => {
+                if (msg.role === 'function') return null
+
+                // Merge function responses into the assistant message for display
+                let displayMessage = msg
+                if (msg.role === 'assistant' && msg.functionCalls) {
+                  const responses = []
+                  let nextIdx = index + 1
+                  while (nextIdx < messages.length && messages[nextIdx].role === 'function') {
+                    try {
+                      // Try to parse JSON to show structured data
+                      const parsed = JSON.parse(messages[nextIdx].content)
+                      responses.push(parsed)
+                    } catch (e) {
+                      responses.push(messages[nextIdx].content)
+                    }
+                    nextIdx++
+                  }
+
+                  if (responses.length > 0) {
+                    // Add property to message for display purposes only
+                    displayMessage = { ...msg, functionResponses: responses } as any
+                  }
+                }
+
+                return (
+                  <ChatMessage
+                    key={msg.id}
+                    message={displayMessage}
+                    isProcessing={isProcessing && messages[messages.length - 1]?.id === msg.id}
+                    onDelete={deleteMessage}
+                    onRegenerate={onRegenerate}
+                    onEdit={onEdit}
+                    onSendFunctionResponse={onSendFunctionResponse}
+                  />
+                )
+              })}
             </div>
             {isProcessing && messages[messages.length - 1]?.role === 'user' && (
               <div className="inline-flex gap-1.5 items-center mt-8">
