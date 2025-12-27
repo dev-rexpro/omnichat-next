@@ -426,7 +426,7 @@ export function RightSidebar({
 
   return (
     <div className="min-w-full md:min-w-[318px] h-full flex flex-col relative bg-background">
-      <div className="absolute top-3 right-3 md:hidden z-50">
+      <div className="absolute top-1 right-3 md:hidden z-50">
         <Button variant="ghost" size="icon" onClick={toggleSidebar}>
           <X className="w-5 h-5 text-muted-foreground" />
         </Button>
