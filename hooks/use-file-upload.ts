@@ -1,17 +1,19 @@
-import * as pdfjs from 'pdfjs-dist';
-import { TextContent, TextItem } from 'pdfjs-dist/types/src/display/api';
+// @ts-ignore
+// import * as pdfjs from 'pdfjs-dist/legacy/build/pdf';
+// import type { TextContent, TextItem } from 'pdfjs-dist/types/src/display/api';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 // Configure PDF.js worker
 // Using local worker file copied to public/ folder for maximum stability
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+// We will set this dynamically when loading the module
+// const WORKER_SRC = '/pdf.worker.min.js'; // No longer needed
 
 export interface FileAttachment {
     name: string;
     type: string;
     data: string; // Base64 data URL or string content for text
-    content?: string; // Extracted text content for PDF/Text
+    content?: string; // Extracted text content for PDF/Text (Optional now for PDFs)
 }
 
 export interface FileUploadApi {
@@ -28,7 +30,7 @@ export interface FileUploadApi {
 }
 
 interface UseFileUploadOptions {
-    pdfAsImage?: boolean;
+    pdfAsImage?: boolean; // Deprecated but kept for compatibility
 }
 
 /**
@@ -37,7 +39,7 @@ interface UseFileUploadOptions {
 export function useFileUpload(
     options: UseFileUploadOptions = { pdfAsImage: false }
 ): FileUploadApi {
-    const { pdfAsImage } = options;
+    // const { pdfAsImage } = options; // No longer used
     const [attachments, setAttachments] = useState<FileAttachment[]>([]);
 
     const addAttachments = (newItems: FileAttachment[]) => {
@@ -74,24 +76,19 @@ export function useFileUpload(
                     }]);
                 }
                 else if (mimeType === 'application/pdf') {
-                    if (pdfAsImage) {
-                        const base64Urls = await convertPDFToImage(file);
-                        addAttachments(base64Urls.map(url => ({
-                            name: `${file.name}`,
-                            type: 'image/png',
-                            data: url
-                        })));
-                    } else {
-                        // Extract text
-                        const content = await convertPDFToText(file);
-                        addAttachments([{
-                            name: file.name,
-                            type: 'application/pdf',
-                            data: '[PDF Content]', // Placeholder for UI
-                            content: content
-                        }]);
-                        toast.success(`PDF ${file.name} converted to text context`);
-                    }
+                    // Optimized: Use Gemini Native PDF Support
+                    // Instead of parsing text client-side (which causes Webpack/PWA issues),
+                    // we send the PDF as a Base64 blob to the API.
+                    // Gemini 1.5/2.0 supports treating PDF as an image/document natively.
+
+                    const base64Url = await getFileAsBase64(file, true);
+                    addAttachments([{
+                        name: file.name,
+                        type: 'application/pdf',
+                        data: base64Url,
+                        // No content extracted here. The backend will use 'data' to create an inlineData part.
+                    }]);
+                    toast.success(`PDF ${file.name} attached for analysis`);
                 }
                 else if (mimeType.startsWith('text/') || mimeType === 'application/json' || file.name.endsWith('.ts') || file.name.endsWith('.tsx') || file.name.endsWith('.js') || file.name.endsWith('.md')) {
                     const content = await getFileAsText(file);
@@ -157,62 +154,4 @@ function getFileAsText(file: File): Promise<string> {
     });
 }
 
-async function getFileAsBuffer(file: File): Promise<ArrayBuffer> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            if (event.target?.result) {
-                resolve(event.target.result as ArrayBuffer);
-            } else {
-                reject(new Error("Failed to read file buffer"));
-            }
-        };
-        reader.readAsArrayBuffer(file);
-    });
-}
-
-async function convertPDFToText(file: File): Promise<string> {
-    const buffer = await getFileAsBuffer(file);
-    const pdf = await pdfjs.getDocument(buffer).promise;
-    const numPages = pdf.numPages;
-    const textContentPromises: Promise<TextContent>[] = [];
-
-    for (let i = 1; i <= numPages; i++) {
-        textContentPromises.push(
-            pdf.getPage(i).then((page) => page.getTextContent())
-        );
-    }
-
-    const textContents = await Promise.all(textContentPromises);
-    const textItems = textContents.flatMap((textContent) =>
-        textContent.items.map((item) => (item as TextItem).str ?? '')
-    );
-
-    return textItems.join('\n');
-}
-
-async function convertPDFToImage(file: File): Promise<string[]> {
-    const buffer = await getFileAsBuffer(file);
-    const doc = await pdfjs.getDocument(buffer).promise;
-    const pages: Promise<string>[] = [];
-
-    for (let i = 1; i <= doc.numPages; i++) {
-        const page = await doc.getPage(i);
-        const viewport = page.getViewport({ scale: 1.5 });
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        if (!ctx) continue;
-
-        const task = page.render({ canvasContext: ctx, viewport: viewport } as any);
-        pages.push(
-            task.promise.then(() => {
-                return canvas.toDataURL();
-            })
-        );
-    }
-
-    return await Promise.all(pages);
-}
+// Helper functions for parsing removed as we use native Gemini API support now

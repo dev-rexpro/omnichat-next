@@ -454,10 +454,10 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
           </div>
         </div>
 
-        <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3 p-2.5 rounded-full bg-background/80 backdrop-blur-lg border border-border shadow-lg`}>
+        <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3 p-2.5 rounded-2xl bg-background/80 backdrop-blur-lg border border-border shadow-lg`}>
           <button
             onClick={toggleCamera}
-            className={`w-14 h-14 flex items-center justify-center rounded-full transition-all ${isCameraOn
+            className={`w-14 h-14 flex items-center justify-center rounded-2xl transition-all ${isCameraOn
               ? 'bg-primary text-primary-foreground shadow-md hover:bg-primary/90'
               : 'bg-background text-foreground border border-input shadow-sm hover:bg-accent hover:text-accent-foreground'
               }`}
@@ -469,7 +469,7 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
           {isMobile && isCameraOn && (
             <button
               onClick={handleSwitchCamera}
-              className={`w-14 h-14 flex items-center justify-center rounded-full transition-all bg-background text-foreground border border-input shadow-sm hover:bg-accent hover:text-accent-foreground`}
+              className={`w-14 h-14 flex items-center justify-center rounded-2xl transition-all bg-background text-foreground border border-input shadow-sm hover:bg-accent hover:text-accent-foreground`}
               aria-label="Switch Camera"
               title="Switch Camera"
             >
@@ -478,7 +478,7 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
           )}
           <button
             onClick={toggleScreenShare}
-            className={`w-14 h-14 flex items-center justify-center rounded-full transition-all ${isScreenSharingOn
+            className={`w-14 h-14 flex items-center justify-center rounded-2xl transition-all ${isScreenSharingOn
               ? 'bg-primary text-primary-foreground shadow-md hover:bg-primary/90'
               : 'bg-background text-foreground border border-input shadow-sm hover:bg-accent hover:text-accent-foreground'
               }`}
@@ -490,7 +490,7 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
           {isRecording ? (
             <button
               onClick={togglePause}
-              className={`w-14 h-14 flex items-center justify-center rounded-full transition-all ${isPaused
+              className={`w-14 h-14 flex items-center justify-center rounded-2xl transition-all ${isPaused
                 ? 'bg-primary text-primary-foreground shadow-md hover:bg-primary/90'
                 : 'bg-secondary text-secondary-foreground border border-input shadow-sm hover:bg-secondary/80'
                 }`}
@@ -502,7 +502,7 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
           ) : (
             <button
               onClick={startRecording}
-              className="w-14 h-14 flex items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all"
+              className="w-14 h-14 flex items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all"
               aria-label="Start"
               title="Start"
             >
@@ -511,7 +511,7 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
           )}
           <button
             onClick={handleEndSession}
-            className="w-14 h-14 flex items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+            className="w-14 h-14 flex items-center justify-center rounded-2xl bg-red-500 text-white hover:bg-red-600 transition-colors"
             aria-label="End Session"
             title="End Session"
           >
