@@ -286,7 +286,7 @@ export function ChatArea({
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, attachments.length > 0 ? attachments : undefined)}
-                placeholder={isRecording ? "Listening..." : "Type your message here, or attach files..."}
+                placeholder={isRecording ? "Listening..." : "Ask Anything"}
                 className="w-full resize-none border-none !bg-transparent dark:!bg-transparent px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none min-h-[52px] max-h-[150px] overflow-y-auto"
                 rows={1}
               />
