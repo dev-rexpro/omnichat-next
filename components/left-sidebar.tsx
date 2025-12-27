@@ -45,7 +45,7 @@ export function LeftSidebar({
   const router = useRouter()
   const { chats, currentChatId, setCurrentChatId, deleteChat, renameChat } = useChat()
   const { user, logout } = useAuth()
-  const { settings, updateSettings } = useSettings()
+  const { settings, updateSettings, resetSession } = useSettings()
   const [openRecentMenu, setOpenRecentMenu] = useState<string | null>(null)
   const [chatIdToRename, setChatIdToRename] = useState<string | null>(null)
   const [chatIdToDelete, setChatIdToDelete] = useState<string | null>(null)
@@ -54,16 +54,8 @@ export function LeftSidebar({
     setCurrentChatId(null)
     setHeaderTitle("New Chat")
 
-    // Reset all tools when starting a new chat
-    updateSettings({
-      tools: {
-        ...settings.tools,
-        canvas: false,
-        deepResearch: false,
-        images: false,
-        videos: false
-      }
-    })
+    // Reset all tools and model when starting a new chat
+    resetSession()
 
     if (window.innerWidth < 768) {
       // logic to close sidebar could be passed via props if needed

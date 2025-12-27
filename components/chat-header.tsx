@@ -38,6 +38,11 @@ const GEMINI_MODELS = [
   { id: "gemini-2.0-flash-lite", name: "Gemini 2.0 Flash Lite" },
 ]
 
+const GEMINI_IMAGE_MODELS = [
+  { id: "gemini-3-pro-image-preview", name: "Nano Banana Pro (Gemini 3 Pro Image)" },
+  { id: "gemini-2.5-flash-image", name: "Nano Banana (Gemini 2.5 Flash Image)" },
+]
+
 interface ChatHeaderProps {
   isLeftOpen: boolean
   isRightOpen: boolean
@@ -48,18 +53,21 @@ interface ChatHeaderProps {
 // To prevent duplicating the list logic, we create a shared component.
 const ModelList = ({
   setSelectedModel,
-  setOpen
+  setOpen,
+  isImagesToolActive
 }: {
   setSelectedModel: (model: string) => void,
-  setOpen: (open: boolean) => void
+  setOpen: (open: boolean) => void,
+  isImagesToolActive: boolean
 }) => {
+  const models = isImagesToolActive ? GEMINI_IMAGE_MODELS : GEMINI_MODELS
   return (
     <Command>
       <CommandInput placeholder="Search model..." />
       <CommandList>
         <CommandEmpty>No model found.</CommandEmpty>
         <CommandGroup>
-          {GEMINI_MODELS.map((model) => (
+          {models.map((model) => (
             <CommandItem
               key={model.id}
               value={model.id}
@@ -98,7 +106,7 @@ export function ChatHeader({
     settings.apiKeys[settings.provider]
   )
 
-  const selectedModelName = GEMINI_MODELS.find(m => m.id === settings.model)?.name || settings.model
+  const selectedModelName = [...GEMINI_MODELS, ...GEMINI_IMAGE_MODELS].find(m => m.id === settings.model)?.name || settings.model
 
   const handleModelSelect = (modelId: string) => {
     updateSettings({ model: modelId });
@@ -179,7 +187,7 @@ export function ChatHeader({
                 {/* Visually hidden title for screen reader accessibility */}
                 <DrawerTitle className="sr-only">Select a Model</DrawerTitle>
                 <div className="p-4">
-                  <ModelList setSelectedModel={handleModelSelect} setOpen={setIsModelDropdownOpen} />
+                  <ModelList setSelectedModel={handleModelSelect} setOpen={setIsModelDropdownOpen} isImagesToolActive={settings.tools.images} />
                 </div>
               </DrawerContent>
             </Drawer>
@@ -190,14 +198,14 @@ export function ChatHeader({
                   variant="outline"
                   role="combobox"
                   aria-expanded={isModelDropdownOpen}
-                  className="h-9 w-[235px] px-3 justify-between text-sm shadow-sm"
+                  className="h-9 w-[300px] px-3 justify-between text-sm shadow-sm"
                 >
                   <span className="font-medium">{selectedModelName}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[235px] p-0">
-                <ModelList setSelectedModel={handleModelSelect} setOpen={setIsModelDropdownOpen} />
+              <PopoverContent className="w-[300px] p-0">
+                <ModelList setSelectedModel={handleModelSelect} setOpen={setIsModelDropdownOpen} isImagesToolActive={settings.tools.images} />
               </PopoverContent>
             </Popover>
           )}

@@ -5,6 +5,7 @@ export interface Settings {
   systemInstruction: string;
   temperature: number;
   mediaResolution: 'default' | 'low' | 'high';
+  syntaxTheme?: string;
   thinking: boolean;
   thinkingLevel: 'minimal' | 'low' | 'medium' | 'high';
   thinkingBudget: number;

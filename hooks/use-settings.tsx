@@ -10,6 +10,7 @@ interface SettingsContextType {
     setSettings: React.Dispatch<React.SetStateAction<Settings>>
     updateSettings: (newSettings: Partial<Settings>) => void
     resetSettings: () => void
+    resetSession: () => void
 }
 
 const defaultSettings: Settings = {
@@ -18,6 +19,7 @@ const defaultSettings: Settings = {
     systemInstruction: "",
     temperature: 1,
     mediaResolution: "default",
+    syntaxTheme: "auto",
     thinking: false,
     thinkingLevel: "low",
     thinkingBudget: 8192,
@@ -59,7 +61,9 @@ const VALID_GEMINI_IDS = [
     "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
     "gemini-2.0-flash",
-    "gemini-2.0-flash-lite"
+    "gemini-2.0-flash-lite",
+    "gemini-3-pro-image-preview",
+    "gemini-2.5-flash-image"
 ]
 
 // ... imports removed from here
@@ -116,7 +120,20 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const model = settings.model;
         let updates: Partial<Settings> = {};
 
-        if (model.includes("gemini-3-pro")) {
+        if (model.includes("gemini-3-pro-image-preview")) {
+            updates = {
+                thinking: true,
+                thinkingLevel: "low", // Image model might differ, but assuming some thinking
+                tools: { ...settings.tools, images: true, googleSearch: false, structuredOutput: false, functionCalling: false },
+                advanced: { ...settings.advanced, maxOutputTokens: 8192 }
+            };
+        } else if (model.includes("gemini-2.5-flash-image")) {
+            updates = {
+                thinking: false,
+                tools: { ...settings.tools, images: true, googleSearch: false, structuredOutput: false, functionCalling: false },
+                advanced: { ...settings.advanced, maxOutputTokens: 8192 }
+            };
+        } else if (model.includes("gemini-3-pro")) {
             updates = {
                 thinking: true,
                 thinkingLevel: "high",
@@ -181,8 +198,20 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setSettings(defaultSettings)
     }
 
+    const resetSession = () => {
+        setSettings((prev) => ({
+            ...prev,
+            model: defaultSettings.model,
+            tools: defaultSettings.tools,
+            thinking: defaultSettings.thinking,
+            thinkingLevel: defaultSettings.thinkingLevel,
+            thinkingBudget: defaultSettings.thinkingBudget,
+            expandThinking: defaultSettings.expandThinking,
+        }))
+    }
+
     return (
-        <SettingsContext.Provider value={{ settings, setSettings, updateSettings, resetSettings }}>
+        <SettingsContext.Provider value={{ settings, setSettings, updateSettings, resetSettings, resetSession }}>
             {children}
         </SettingsContext.Provider>
     )

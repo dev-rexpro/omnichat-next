@@ -268,7 +268,6 @@ export const ChatMessage = memo(function ChatMessage({
                                     functionCall={call}
                                     functionResponse={message.functionResponses?.[idx]}
                                     onSendResponse={onSendFunctionResponse ? (response) => onSendFunctionResponse(call.name, response) : undefined}
-                                    isExpanded={true}
                                 />
                             ))}
                         </div>

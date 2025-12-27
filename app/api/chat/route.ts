@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { handleImageGeneration } from './image-gen-helper';
 
 async function handleDeepResearch(messages: any[], apiKey: string) {
     const lastMessage = messages[messages.length - 1];
@@ -136,6 +137,14 @@ export async function POST(req: Request) {
         if (settings.tools?.deepResearch) {
             return await handleDeepResearch(messages, apiKey);
         }
+
+        // Branching for Image Generation
+        const isImageModel = model.includes("image");
+        if (isImageModel) {
+            return await handleImageGeneration(messages, model, apiKey);
+        }
+
+
 
         // Initialize Google Generative AI
         const genAI = new GoogleGenerativeAI(apiKey);

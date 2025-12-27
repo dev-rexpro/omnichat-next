@@ -17,6 +17,7 @@ export interface Message {
   groundingMetadata?: any;
   urlContextMetadata?: any;
   functionCalls?: any[];
+  functionResponses?: any[];
   name?: string;
   createdAt: Date;
 }
