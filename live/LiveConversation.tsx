@@ -5,7 +5,7 @@ import { Mic, Moon, Pause, Play, Sun, X, Video, VideoOff, ScreenShare, ScreenSha
 import { createBlob, decode, decodeAudioData } from '../lib/audioUtils';
 import { AudioVisualizer } from './AudioVisualizer';
 import { LiveConversationModel } from '../types';
-import { useAppStore } from '../store';
+import { useSettings } from '../hooks/use-settings';
 
 interface LiveConversationProps {
   isOpen: boolean;
@@ -15,16 +15,16 @@ interface LiveConversationProps {
 }
 
 const useMediaQuery = (query: string) => {
-    const [matches, setMatches] = React.useState(() => window.matchMedia(query).matches);
+  const [matches, setMatches] = React.useState(() => window.matchMedia(query).matches);
 
-    React.useEffect(() => {
-        const mediaQuery = window.matchMedia(query);
-        const handler = (event: MediaQueryListEvent) => setMatches(event.matches);
-        mediaQuery.addEventListener('change', handler);
-        return () => mediaQuery.removeEventListener('change', handler);
-    }, [query]);
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia(query);
+    const handler = (event: MediaQueryListEvent) => setMatches(event.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, [query]);
 
-    return matches;
+  return matches;
 };
 
 
@@ -38,8 +38,9 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
   const [isScreenSharingOn, setIsScreenSharingOn] = useState(false);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user');
-  
-  const { userApiKey } = useAppStore();
+
+  const { settings } = useSettings();
+  const userApiKey = settings.apiKeys.google;
 
   const clientRef = useRef<GoogleGenAI | null>(null);
   const sessionRef = useRef<Session | null>(null);
@@ -69,9 +70,9 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
   useEffect(() => {
     const videoElement = videoElementRef.current;
     if (videoElement) {
-        if (videoElement.srcObject !== videoStream) {
-            videoElement.srcObject = videoStream;
-        }
+      if (videoElement.srcObject !== videoStream) {
+        videoElement.srcObject = videoStream;
+      }
     }
   }, [videoStream]);
 
@@ -123,21 +124,21 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
   }, []);
 
   useEffect(() => {
-      if (isRecording && videoStream) {
-          startSendingFrames();
-      } else {
-          stopSendingFrames();
-      }
+    if (isRecording && videoStream) {
+      startSendingFrames();
+    } else {
+      stopSendingFrames();
+    }
   }, [isRecording, videoStream, startSendingFrames, stopSendingFrames]);
 
 
   const stopVideoStream = useCallback(() => {
     stopSendingFrames();
     setVideoStream(currentStream => {
-        if (currentStream) {
-            currentStream.getTracks().forEach(track => track.stop());
-        }
-        return null;
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+      }
+      return null;
     });
     setIsCameraOn(false);
     setIsScreenSharingOn(false);
@@ -146,22 +147,22 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
   const stopRecording = useCallback((shouldUpdateStatus = true) => {
     if (!mediaStreamRef.current) return;
     if (shouldUpdateStatus) setStatus('Stopping recording...');
-    
+
     setIsRecording(false);
     setIsPaused(false);
 
     if (scriptProcessorNodeRef.current) {
-        scriptProcessorNodeRef.current.disconnect();
-        scriptProcessorNodeRef.current.onaudioprocess = null;
+      scriptProcessorNodeRef.current.disconnect();
+      scriptProcessorNodeRef.current.onaudioprocess = null;
     }
     scriptProcessorNodeRef.current = null;
-    
+
     sourceNodeRef.current?.disconnect();
     sourceNodeRef.current = null;
-    
+
     mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
     mediaStreamRef.current = null;
-    
+
     if (inputAudioContextRef.current?.state === 'running') {
       inputAudioContextRef.current.suspend().catch(console.error);
     }
@@ -171,10 +172,10 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
 
   const initSession = useCallback(async () => {
     if (!clientRef.current || !outputAudioContextRef.current || !outputNodeRef.current) {
-        const message = "Cannot init session, audio context or client not ready.";
-        console.error(message);
-        setError(message);
-        return;
+      const message = "Cannot init session, audio context or client not ready.";
+      console.error(message);
+      setError(message);
+      return;
     }
     const outputNode = outputNodeRef.current;
     try {
@@ -197,10 +198,10 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
                 });
                 source.start(nextStartTimeRef.current);
                 nextStartTimeRef.current += audioBuffer.duration;
-                sourcesRef.add(source);
+                sourcesRef.current.add(source);
               } catch (e) {
-                  console.error("Error playing back audio:", e);
-                  setError("Failed to process and play back audio response.");
+                console.error("Error playing back audio:", e);
+                setError("Failed to process and play back audio response.");
               }
             }
             const interrupted = message.serverContent?.interrupted;
@@ -242,18 +243,18 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
     const effectiveApiKey = userApiKey || process.env.API_KEY;
 
     const cleanup = () => {
-        stopRecording(false);
-        stopVideoStream();
-        if (sessionRef.current) {
-            try { sessionRef.current.close(); } catch (e) { console.warn("Error closing session:", e); }
-        }
-        sessionRef.current = null;
-        inputAudioContextRef.current?.close().catch(console.error);
-        outputAudioContextRef.current?.close().catch(console.error);
-        inputAudioContextRef.current = null;
-        outputAudioContextRef.current = null;
-        outputNodeRef.current = null;
-        setOutputNodeForVisualizer(null);
+      stopRecording(false);
+      stopVideoStream();
+      if (sessionRef.current) {
+        try { sessionRef.current.close(); } catch (e) { console.warn("Error closing session:", e); }
+      }
+      sessionRef.current = null;
+      inputAudioContextRef.current?.close().catch(console.error);
+      outputAudioContextRef.current?.close().catch(console.error);
+      inputAudioContextRef.current = null;
+      outputAudioContextRef.current = null;
+      outputNodeRef.current = null;
+      setOutputNodeForVisualizer(null);
     };
 
     if (!isOpen) {
@@ -262,37 +263,37 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
     }
 
     const setup = async () => {
-        if (!isMounted) return;
-        if (!effectiveApiKey) {
-          setError('API Key not found. Please set it in Settings > Account & API.');
-          return;
-        }
+      if (!isMounted) return;
+      if (!effectiveApiKey) {
+        setError('API Key not found. Please set it in Settings > Account & API.');
+        return;
+      }
 
-        try {
-            clientRef.current = new GoogleGenAI({ apiKey: effectiveApiKey });
+      try {
+        clientRef.current = new GoogleGenAI({ apiKey: effectiveApiKey });
 
-            // @ts-ignore
-            const inputCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-            inputAudioContextRef.current = inputCtx;
-            // @ts-ignore
-            const outputCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-            outputAudioContextRef.current = outputCtx;
-            
-            const outputGainNode = outputCtx.createGain();
-            outputGainNode.connect(outputCtx.destination);
-            outputNodeRef.current = outputGainNode;
-            setOutputNodeForVisualizer(outputGainNode);
-            nextStartTimeRef.current = outputCtx.currentTime;
+        // @ts-ignore
+        const inputCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+        inputAudioContextRef.current = inputCtx;
+        // @ts-ignore
+        const outputCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+        outputAudioContextRef.current = outputCtx;
 
-            await initSession();
-        } catch (err: any) {
-            console.error("Setup failed:", err);
-            setError(`Initialization failed: ${err.message}`);
-        }
+        const outputGainNode = outputCtx.createGain();
+        outputGainNode.connect(outputCtx.destination);
+        outputNodeRef.current = outputGainNode;
+        setOutputNodeForVisualizer(outputGainNode);
+        nextStartTimeRef.current = outputCtx.currentTime;
+
+        await initSession();
+      } catch (err: any) {
+        console.error("Setup failed:", err);
+        setError(`Initialization failed: ${err.message}`);
+      }
     };
 
     setup();
-    
+
     return () => {
       isMounted = false;
       cleanup();
@@ -314,10 +315,10 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
     }
 
     setIsPaused(false);
-    
+
     if (inputCtx.state === 'suspended') await inputCtx.resume();
     if (outputCtx.state === 'suspended') await outputCtx.resume();
-    
+
     setStatus('Requesting microphone access...');
 
     try {
@@ -326,13 +327,13 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
       setStatus('Microphone access granted. Starting capture...');
 
       sourceNodeRef.current = inputCtx.createMediaStreamSource(stream);
-      
+
       const bufferSize = 256;
       scriptProcessorNodeRef.current = inputCtx.createScriptProcessor(bufferSize, 1, 1);
-      
+
       scriptProcessorNodeRef.current.onaudioprocess = (e) => {
         if (!processingStateRef.current.isRecording || processingStateRef.current.isPaused || !sessionRef.current) return;
-        
+
         const pcmData = e.inputBuffer.getChannelData(0);
         try {
           sessionRef.current.sendRealtimeInput({ media: createBlob(pcmData) });
@@ -344,8 +345,8 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
       };
 
       sourceNodeRef.current.connect(scriptProcessorNodeRef.current);
-      scriptProcessorNodeRef.current.connect(inputCtx.destination); 
-      
+      scriptProcessorNodeRef.current.connect(inputCtx.destination);
+
       setIsRecording(true);
       setStatus('🔴 Live');
     } catch (err: any) {
@@ -357,32 +358,32 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
 
   const togglePause = () => {
     setIsPaused(p => {
-        const newPausedState = !p;
-        if (newPausedState) setStatus('Paused');
-        else setStatus('🔴 Live');
-        return newPausedState;
+      const newPausedState = !p;
+      if (newPausedState) setStatus('Paused');
+      else setStatus('🔴 Live');
+      return newPausedState;
     });
   };
 
   const handleEndSession = () => {
     onClose();
   };
-  
+
   const startVideoStream = useCallback(async (getStream: () => Promise<MediaStream>, type: 'camera' | 'screen') => {
     stopVideoStream();
     try {
       const stream = await getStream();
       setVideoStream(stream);
       if (type === 'camera') {
-          setIsCameraOn(true);
-          setIsScreenSharingOn(false);
+        setIsCameraOn(true);
+        setIsScreenSharingOn(false);
       } else {
-          setIsScreenSharingOn(true);
-          setIsCameraOn(false);
+        setIsScreenSharingOn(true);
+        setIsCameraOn(false);
       }
-      
+
       stream.getTracks()[0].onended = () => {
-          stopVideoStream();
+        stopVideoStream();
       };
     } catch (err: any) {
       setError(`Error starting video stream: ${err.message}`);
@@ -401,13 +402,13 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
   }, [isCameraOn, stopVideoStream, startVideoStream, cameraFacingMode]);
 
   const handleSwitchCamera = useCallback(() => {
-      if (!isCameraOn) return;
-      const newFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
-      setCameraFacingMode(newFacingMode);
-      startVideoStream(
-          () => navigator.mediaDevices.getUserMedia({ video: { facingMode: newFacingMode } }),
-          'camera'
-      );
+    if (!isCameraOn) return;
+    const newFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
+    setCameraFacingMode(newFacingMode);
+    startVideoStream(
+      () => navigator.mediaDevices.getUserMedia({ video: { facingMode: newFacingMode } }),
+      'camera'
+    );
   }, [isCameraOn, cameraFacingMode, startVideoStream]);
 
 
@@ -425,94 +426,103 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ isOpen, onCl
 
   return (
     <div className={`fixed inset-0 z-50 transition-colors duration-300 bg-background text-text-primary`}>
-        <div className={`absolute top-0 left-0 w-full h-full z-0 bg-black transition-opacity duration-300 ${videoStream ? 'opacity-100' : 'opacity-0'}`}>
-            <video
-                ref={videoElementRef}
-                autoPlay
-                muted
-                playsInline
-                className={`w-full h-full object-cover ${isScreenSharingOn ? '' : 'transform -scale-x-100'}`}
-            />
-        </div>
+      <div className={`absolute top-0 left-0 w-full h-full z-0 bg-black transition-opacity duration-300 ${videoStream ? 'opacity-100' : 'opacity-0'}`}>
+        <video
+          ref={videoElementRef}
+          autoPlay
+          muted
+          playsInline
+          className={`w-full h-full object-cover ${isScreenSharingOn ? '' : 'transform -scale-x-100'}`}
+        />
+      </div>
       <div className="relative w-full h-full font-sans">
-        <div 
+        <div
           className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none"
           style={{
-              height: '100%',
+            height: '100%',
           }}
         >
           <div className="relative w-full h-full">
-            <AudioVisualizer outputNode={outputNodeForVisualizer} lightTheme={isLightTheme} isMobile={isMobile} />
+            <AudioVisualizer outputNode={outputNodeForVisualizer || undefined} lightTheme={isLightTheme} isMobile={isMobile} />
           </div>
         </div>
 
         <div className="absolute top-0 left-0 right-0 z-20 flex justify-between items-center p-5">
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-black/5 dark:bg-white/15`}>
-                <span className={`w-2.5 h-2.5 rounded-full bg-accent ${isRecording && !isPaused ? 'animate-[pulse_1.5s_infinite]' : ''}`}/>
-                <span>{status}</span>
-            </div>
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-black/5 dark:bg-white/15`}>
+            <span className={`w-2.5 h-2.5 rounded-full bg-accent ${isRecording && !isPaused ? 'animate-[pulse_1.5s_infinite]' : ''}`} />
+            <span>{status}</span>
+          </div>
         </div>
 
-        <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3 p-2.5 rounded-full bg-background/80 backdrop-blur-lg`}>
+        <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3 p-2.5 rounded-full bg-background/80 backdrop-blur-lg border border-border shadow-lg`}>
+          <button
+            onClick={toggleCamera}
+            className={`w-14 h-14 flex items-center justify-center rounded-full transition-all ${isCameraOn
+              ? 'bg-primary text-primary-foreground shadow-md hover:bg-primary/90'
+              : 'bg-background text-foreground border border-input shadow-sm hover:bg-accent hover:text-accent-foreground'
+              }`}
+            aria-label={isCameraOn ? 'Stop Camera' : 'Start Camera'}
+            title="Toggle Camera"
+          >
+            {isCameraOn ? <VideoOff size={24} /> : <Video size={24} />}
+          </button>
+          {isMobile && isCameraOn && (
             <button
-                onClick={toggleCamera}
-                className={`w-14 h-14 flex items-center justify-center rounded-full transition-colors ${isCameraOn ? 'bg-accent text-white' : 'bg-card text-text-primary'}`}
-                aria-label={isCameraOn ? 'Stop Camera' : 'Start Camera'}
-                title="Toggle Camera"
+              onClick={handleSwitchCamera}
+              className={`w-14 h-14 flex items-center justify-center rounded-full transition-all bg-background text-foreground border border-input shadow-sm hover:bg-accent hover:text-accent-foreground`}
+              aria-label="Switch Camera"
+              title="Switch Camera"
             >
-                {isCameraOn ? <VideoOff size={28} /> : <Video size={28} />}
+              <SwitchCamera size={24} />
             </button>
-             {isMobile && isCameraOn && (
-                <button
-                    onClick={handleSwitchCamera}
-                    className={`w-14 h-14 flex items-center justify-center rounded-full transition-colors bg-card text-text-primary`}
-                    aria-label="Switch Camera"
-                    title="Switch Camera"
-                >
-                    <SwitchCamera size={28} />
-                </button>
-            )}
+          )}
+          <button
+            onClick={toggleScreenShare}
+            className={`w-14 h-14 flex items-center justify-center rounded-full transition-all ${isScreenSharingOn
+              ? 'bg-primary text-primary-foreground shadow-md hover:bg-primary/90'
+              : 'bg-background text-foreground border border-input shadow-sm hover:bg-accent hover:text-accent-foreground'
+              }`}
+            aria-label={isScreenSharingOn ? 'Stop Screen Share' : 'Start Screen Share'}
+            title="Toggle Screen Share"
+          >
+            {isScreenSharingOn ? <ScreenShareOff size={24} /> : <ScreenShare size={24} />}
+          </button>
+          {isRecording ? (
             <button
-                onClick={toggleScreenShare}
-                className={`w-14 h-14 flex items-center justify-center rounded-full transition-colors ${isScreenSharingOn ? 'bg-accent text-white' : 'bg-card text-text-primary'}`}
-                aria-label={isScreenSharingOn ? 'Stop Screen Share' : 'Start Screen Share'}
-                title="Toggle Screen Share"
+              onClick={togglePause}
+              className={`w-14 h-14 flex items-center justify-center rounded-full transition-all ${isPaused
+                ? 'bg-primary text-primary-foreground shadow-md hover:bg-primary/90'
+                : 'bg-secondary text-secondary-foreground border border-input shadow-sm hover:bg-secondary/80'
+                }`}
+              aria-label={isPaused ? 'Resume' : 'Pause'}
+              title={isPaused ? 'Resume' : 'Pause'}
             >
-                {isScreenSharingOn ? <ScreenShareOff size={28} /> : <ScreenShare size={28} />}
+              {isPaused ? <Play size={24} className="ml-1" /> : <Pause size={24} />}
             </button>
-            {isRecording ? (
-                <button
-                    onClick={togglePause}
-                    className={`w-14 h-14 flex items-center justify-center rounded-full transition-colors ${isPaused ? 'bg-accent text-white' : 'bg-card text-text-primary'}`}
-                    aria-label={isPaused ? 'Resume' : 'Pause'}
-                    title={isPaused ? 'Resume' : 'Pause'}
-                >
-                    {isPaused ? <Play size={28} className="ml-1" /> : <Pause size={28} />}
-                </button>
-            ) : (
-                <button
-                    onClick={startRecording}
-                    className="w-14 h-14 flex items-center justify-center rounded-full bg-accent text-white hover:bg-accent-hover transition-colors"
-                    aria-label="Start"
-                    title="Start"
-                >
-                    <Mic size={28} />
-                </button>
-            )}
+          ) : (
             <button
-                onClick={handleEndSession}
-                className="w-14 h-14 flex items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
-                aria-label="End Session"
-                title="End Session"
+              onClick={startRecording}
+              className="w-14 h-14 flex items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all"
+              aria-label="Start"
+              title="Start"
             >
-                <X size={28} />
+              <Mic size={24} />
             </button>
+          )}
+          <button
+            onClick={handleEndSession}
+            className="w-14 h-14 flex items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+            aria-label="End Session"
+            title="End Session"
+          >
+            <X size={28} />
+          </button>
         </div>
-        
+
         {error &&
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 text-center p-4 bg-black/20 dark:bg-white/10 rounded-lg backdrop-blur-sm max-w-sm">
-                <p className="text-red-400 mt-2">{error}</p>
-            </div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 text-center p-4 bg-black/20 dark:bg-white/10 rounded-lg backdrop-blur-sm max-w-sm">
+            <p className="text-red-400 mt-2">{error}</p>
+          </div>
         }
       </div>
     </div>

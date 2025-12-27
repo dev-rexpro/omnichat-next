@@ -30,6 +30,8 @@ import { MessageActions } from "@/components/message-actions"
 import { UserMessageActions } from "@/components/user-message-actions"
 import MarkdownDisplay from "@/components/markdown-display"
 import { ChatMessage } from "@/components/chat-message"
+import { LiveConversation } from "../live/LiveConversation"
+import { useTheme } from "next-themes"
 
 
 
@@ -70,6 +72,8 @@ export function ChatArea({
   const { settings, updateSettings } = useSettings();
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)")
+  const [showLiveConversation, setShowLiveConversation] = useState(false);
+  const { theme } = useTheme();
 
   const toggleTool = (tool: keyof typeof settings.tools) => {
     updateSettings({
@@ -453,6 +457,7 @@ export function ChatArea({
                         variant="secondary"
                         size="icon"
                         className="h-8 w-8 rounded-[10px] bg-accent text-foreground hover:bg-accent/80"
+                        onClick={() => setShowLiveConversation(true)}
                       >
                         <AudioLines className="w-4 h-4" />
                       </Button>
@@ -471,6 +476,13 @@ export function ChatArea({
           </div>
         </div>
       </div>
+
+      <LiveConversation
+        isOpen={showLiveConversation}
+        onClose={() => setShowLiveConversation(false)}
+        appTheme={theme === 'dark' || theme === 'system' ? 'dark' : 'light'}
+        model="gemini-2.5-flash-native-audio-preview-12-2025"
+      />
     </main>
   )
 }
