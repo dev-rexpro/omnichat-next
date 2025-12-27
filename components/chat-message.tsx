@@ -240,7 +240,7 @@ export const ChatMessage = memo(function ChatMessage({
                             )
                         ) : (
                             isAssistant && isProcessing && (
-                                <div className="flex gap-1.5 items-center">
+                                <div className="flex gap-1.5 items-center ml-4">
                                     <span className="h-1.5 w-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                                     <span className="h-1.5 w-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
                                     <span className="h-1.5 w-1.5 bg-primary/40 rounded-full animate-bounce"></span>
@@ -277,7 +277,7 @@ export const ChatMessage = memo(function ChatMessage({
                 {/* Action Buttons */}
                 <div className={cn(
                     "flex items-center gap-0.5 mt-1 transition-opacity",
-                    "opacity-0 group-hover:opacity-100",
+                    "opacity-100 md:opacity-0 md:group-hover:opacity-100",
                     isUser && "flex-row-reverse"
                 )}>
                     <Tooltip>

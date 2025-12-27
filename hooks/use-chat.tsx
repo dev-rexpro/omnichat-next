@@ -32,9 +32,24 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentChatId, _setCurrentChatId] = useState<string | null>(null);
   const currentChatIdRef = useRef<string | null>(null);
 
+  // Restore session from localStorage on mount
+  useEffect(() => {
+    const savedId = localStorage.getItem('omnichat_current_chat_id');
+    if (savedId) {
+      _setCurrentChatId(savedId);
+      currentChatIdRef.current = savedId;
+    }
+  }, []);
+
   const setCurrentChatId = useCallback((id: string | null) => {
     currentChatIdRef.current = id;
     _setCurrentChatId(id);
+
+    if (id) {
+      localStorage.setItem('omnichat_current_chat_id', id);
+    } else {
+      localStorage.removeItem('omnichat_current_chat_id');
+    }
   }, []);
 
   // Load all chats for current user sorted by updatedAt desc

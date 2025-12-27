@@ -218,7 +218,7 @@ export function ChatArea({
               })}
             </div>
             {isProcessing && messages[messages.length - 1]?.role === 'user' && (
-              <div className="inline-flex gap-1.5 items-center mt-8">
+              <div className="inline-flex gap-1.5 items-center mt-8 ml-4">
                 <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                 <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
                 <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></span>
