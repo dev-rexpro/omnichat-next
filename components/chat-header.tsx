@@ -127,7 +127,7 @@ export function ChatHeader({
 
   return (
     <>
-      <header className="h-14 flex flex-shrink-0 items-center justify-between px-4 border-b border-border bg-card/50 backdrop-blur-sm">
+      <header className="h-14 flex flex-shrink-0 items-center justify-between px-4 bg-card/50 backdrop-blur-sm">
         <div className="flex items-center gap-2 md:gap-3 text-foreground transition-all duration-300 min-w-0 flex-1">
           <Tooltip>
             <TooltipTrigger asChild>
