@@ -124,7 +124,7 @@ export function LeftSidebar({
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="h-14 flex items-center px-4 flex-shrink-0 overflow-hidden border-b border-border">
+          <div className="h-14 flex items-center px-4 flex-shrink-0 overflow-hidden">
             <div className="w-8 h-8 flex-shrink-0 bg-primary text-primary-foreground rounded-lg flex items-center justify-center shadow-sm">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
