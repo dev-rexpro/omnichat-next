@@ -2,7 +2,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import {
   PanelLeftClose,
@@ -27,23 +27,11 @@ import { cn } from "@/lib/utils"
 import { RenameChatDialog } from "@/components/rename-chat-dialog"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
+import { getDefaultModels } from "@/lib/fetch-models"
+import providersConfig from "@/config/inference-providers.json"
 
-const GEMINI_MODELS = [
-  { id: "gemini-3-pro-preview", name: "Gemini 3 Pro" },
-  { id: "gemini-3-flash-preview", name: "Gemini 3 Flash" },
-  { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro" },
-  { id: "gemini-flash-latest", name: "Gemini Flash Latest" },
-  { id: "gemini-flash-lite-latest", name: "Gemini Flash Lite Latest" },
-  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
-  { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite" },
-  { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
-  { id: "gemini-2.0-flash-lite", name: "Gemini 2.0 Flash Lite" },
-]
-
-const GEMINI_IMAGE_MODELS = [
-  { id: "gemini-3-pro-image-preview", name: "Nano Banana Pro (Gemini 3 Pro Image)" },
-  { id: "gemini-2.5-flash-image", name: "Nano Banana (Gemini 2.5 Flash Image)" },
-]
+type ProviderId = keyof typeof providersConfig
+type ProviderModel = { id: string; name: string }
 
 interface ChatHeaderProps {
   isLeftOpen: boolean
@@ -56,20 +44,34 @@ interface ChatHeaderProps {
 const ModelList = ({
   setSelectedModel,
   setOpen,
-  isImagesToolActive
+  isImagesToolActive,
+  provider
 }: {
   setSelectedModel: (model: string) => void,
   setOpen: (open: boolean) => void,
-  isImagesToolActive: boolean
+  isImagesToolActive: boolean,
+  provider: ProviderId
 }) => {
-  const models = isImagesToolActive ? GEMINI_IMAGE_MODELS : GEMINI_MODELS
+  const allModels = useMemo(() => {
+    const defaultModels = getDefaultModels(provider)
+    if (isImagesToolActive && provider === 'google') {
+      // Add image models for Google
+      return [
+        ...defaultModels,
+        { id: "gemini-3-pro-image-preview", name: "Nano Banana Pro (Gemini 3 Pro Image)" },
+        { id: "gemini-2.5-flash-image", name: "Nano Banana (Gemini 2.5 Flash Image)" },
+      ]
+    }
+    return defaultModels
+  }, [provider, isImagesToolActive])
+
   return (
     <Command>
       <CommandInput placeholder="Search model..." />
       <CommandList>
         <CommandEmpty>No model found.</CommandEmpty>
         <CommandGroup>
-          {models.map((model) => (
+          {allModels.map((model) => (
             <CommandItem
               key={model.id}
               value={model.id}
@@ -108,7 +110,24 @@ export function ChatHeader({
     settings.apiKeys[settings.provider]
   )
 
-  const selectedModelName = [...GEMINI_MODELS, ...GEMINI_IMAGE_MODELS].find(m => m.id === settings.model)?.name || settings.model
+  // Get available models for current provider
+  const availableModels = useMemo(() => {
+    return getDefaultModels(settings.provider as ProviderId)
+  }, [settings.provider])
+
+  const selectedModelName = useMemo(() => {
+    const found = availableModels.find(m => m.id === settings.model)
+    if (found) return found.name
+    // Fallback for image models if provider is Google
+    if (settings.provider === 'google' && settings.tools?.images) {
+      const imageModels = [
+        { id: "gemini-3-pro-image-preview", name: "Nano Banana Pro (Gemini 3 Pro Image)" },
+        { id: "gemini-2.5-flash-image", name: "Nano Banana (Gemini 2.5 Flash Image)" },
+      ]
+      return imageModels.find(m => m.id === settings.model)?.name || settings.model
+    }
+    return settings.model
+  }, [availableModels, settings.model, settings.provider, settings.tools?.images])
 
   const handleModelSelect = (modelId: string) => {
     updateSettings({ model: modelId });
@@ -192,7 +211,7 @@ export function ChatHeader({
               <DrawerContent>
                 <DrawerTitle className="sr-only">Select a Model</DrawerTitle>
                 <div className="p-4">
-                  <ModelList setSelectedModel={handleModelSelect} setOpen={setIsModelDropdownOpen} isImagesToolActive={settings.tools.images} />
+                  <ModelList setSelectedModel={handleModelSelect} setOpen={setIsModelDropdownOpen} isImagesToolActive={settings.tools.images} provider={settings.provider as ProviderId} />
                 </div>
               </DrawerContent>
             </Drawer>
@@ -210,7 +229,7 @@ export function ChatHeader({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[280px] p-0">
-                <ModelList setSelectedModel={handleModelSelect} setOpen={setIsModelDropdownOpen} isImagesToolActive={settings.tools.images} />
+                <ModelList setSelectedModel={handleModelSelect} setOpen={setIsModelDropdownOpen} isImagesToolActive={settings.tools.images} provider={settings.provider as ProviderId} />
               </PopoverContent>
             </Popover>
           )}

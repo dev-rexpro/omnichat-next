@@ -1,0 +1,115 @@
+{
+  "google": [
+    { "id": "gemini-3-pro-preview", "name": "Gemini 3 Pro" },
+    { "id": "gemini-3-flash-preview", "name": "Gemini 3 Flash" },
+    { "id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro" },
+    { "id": "gemini-flash-latest", "name": "Gemini Flash Latest" },
+    { "id": "gemini-flash-lite-latest", "name": "Gemini Flash Lite Latest" },
+    { "id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash" },
+    { "id": "gemini-2.5-flash-lite", "name": "Gemini 2.5 Flash Lite" },
+    { "id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash" },
+    { "id": "gemini-2.0-flash-lite", "name": "Gemini 2.0 Flash Lite" }
+  ],
+  "openai": [
+    { "id": "gpt-4o", "name": "GPT-4o" },
+    { "id": "gpt-4o-mini", "name": "GPT-4o Mini" },
+    { "id": "gpt-4-turbo", "name": "GPT-4 Turbo" },
+    { "id": "o1-preview", "name": "o1 Preview" },
+    { "id": "o1-mini", "name": "o1 Mini" }
+  ],
+  "groq": [
+    { "id": "mixtral-8x7b-32768", "name": "Mixtral 8x7B" },
+    { "id": "llama2-70b-4096", "name": "Llama 2 70B" },
+    { "id": "llama-3.1-70b-versatile", "name": "Llama 3.1 70B" },
+    { "id": "llama-3.1-8b-instant", "name": "Llama 3.1 8B" },
+    { "id": "llama-3-70b-8192", "name": "Llama 3 70B" },
+    { "id": "llama-3-8b-8192", "name": "Llama 3 8B" },
+    { "id": "gemma-7b-it", "name": "Gemma 7B" }
+  ],
+  "open-router": [
+    { "id": "openai/gpt-4-turbo", "name": "OpenAI GPT-4 Turbo" },
+    { "id": "openai/gpt-4o", "name": "OpenAI GPT-4o" },
+    { "id": "anthropic/claude-3-opus", "name": "Claude 3 Opus" },
+    { "id": "anthropic/claude-3-sonnet", "name": "Claude 3 Sonnet" },
+    { "id": "meta-llama/llama-2-70b-chat", "name": "Llama 2 70B Chat" },
+    { "id": "mistralai/mistral-7b-instruct", "name": "Mistral 7B Instruct" },
+    { "id": "meta-llama/llama-3-70b-instruct", "name": "Llama 3 70B Instruct" },
+    { "id": "meta-llama/llama-3-8b-instruct", "name": "Llama 3 8B Instruct" }
+  ],
+  "anthropic": [
+    { "id": "claude-3-opus-20250219", "name": "Claude 3 Opus" },
+    { "id": "claude-3-5-sonnet-20241022", "name": "Claude 3.5 Sonnet" },
+    { "id": "claude-3-5-haiku-20241022", "name": "Claude 3.5 Haiku" },
+    { "id": "claude-3-haiku-20240307", "name": "Claude 3 Haiku" }
+  ],
+  "mistral": [
+    { "id": "mistral-large-latest", "name": "Mistral Large" },
+    { "id": "mistral-medium-latest", "name": "Mistral Medium" },
+    { "id": "mistral-small-latest", "name": "Mistral Small" },
+    { "id": "open-mistral-7b", "name": "Open Mistral 7B" }
+  ],
+  "deepseek": [
+    { "id": "deepseek-chat", "name": "DeepSeek Chat" },
+    { "id": "deepseek-coder", "name": "DeepSeek Coder" }
+  ],
+  "qwen": [
+    { "id": "qwen-max", "name": "Qwen Max" },
+    { "id": "qwen-turbo", "name": "Qwen Turbo" },
+    { "id": "qwen-plus", "name": "Qwen Plus" }
+  ],
+  "cohere": [
+    { "id": "command-r-plus", "name": "Command R Plus" },
+    { "id": "command-r", "name": "Command R" },
+    { "id": "command-light", "name": "Command Light" },
+    { "id": "command", "name": "Command" }
+  ],
+  "perplexity": [
+    { "id": "pplx-7b-online", "name": "Perplexity 7B Online" },
+    { "id": "pplx-70b-online", "name": "Perplexity 70B Online" },
+    { "id": "pplx-7b-chat", "name": "Perplexity 7B Chat" },
+    { "id": "pplx-70b-chat", "name": "Perplexity 70B Chat" }
+  ],
+  "together": [
+    { "id": "meta-llama/Llama-2-70b-chat-hf", "name": "Llama 2 70B Chat" },
+    { "id": "meta-llama/Llama-3-70b-chat-hf", "name": "Llama 3 70B Chat" },
+    { "id": "mistralai/Mistral-7B-Instruct-v0.1", "name": "Mistral 7B" },
+    { "id": "NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO", "name": "Nous Hermes 2 Mixtral" }
+  ],
+  "hugging-face": [
+    { "id": "mistralai/Mistral-7B-Instruct-v0.1", "name": "Mistral 7B Instruct" },
+    { "id": "meta-llama/Llama-2-70b-chat-hf", "name": "Llama 2 70B Chat" },
+    { "id": "meta-llama/Llama-3-70b-chat-hf", "name": "Llama 3 70B Chat" },
+    { "id": "NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO", "name": "Nous Hermes 2 Mixtral" }
+  ],
+  "nvidia": [
+    { "id": "meta/llama2-70b", "name": "Llama 2 70B" },
+    { "id": "mistralai/mistral-7b-instruct-v2", "name": "Mistral 7B" },
+    { "id": "meta/llama-3-70b-instruct", "name": "Llama 3 70B" },
+    { "id": "meta/llama-3-8b-instruct", "name": "Llama 3 8B" }
+  ],
+  "azure": [
+    { "id": "gpt-4", "name": "GPT-4" },
+    { "id": "gpt-4-turbo", "name": "GPT-4 Turbo" },
+    { "id": "gpt-35-turbo", "name": "GPT-3.5 Turbo" }
+  ],
+  "aws": [
+    { "id": "anthropic.claude-3-sonnet-20240229-v1:0", "name": "Claude 3 Sonnet" },
+    { "id": "anthropic.claude-3-opus-20240229-v1:0", "name": "Claude 3 Opus" },
+    { "id": "meta.llama2-70b-chat-v1", "name": "Llama 2 70B Chat" }
+  ],
+  "llama-cpp": [
+    { "id": "default", "name": "Local Model" }
+  ],
+  "lm-studio": [
+    { "id": "default", "name": "Local Model" }
+  ],
+  "ollama": [
+    { "id": "default", "name": "Local Model" }
+  ],
+  "vllm": [
+    { "id": "default", "name": "Local Model" }
+  ],
+  "custom": [
+    { "id": "default", "name": "Custom Model" }
+  ]
+}
