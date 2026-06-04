@@ -246,7 +246,7 @@ export function LeftSidebar({
           </div>
 
           {/* Footer (Settings & Profile) */}
-          <div className="p-3 space-y-2 flex-shrink-0 border-t border-border">
+          <div className="p-3 space-y-2 flex-shrink-0">
             <Tooltip open={isLeftOpen ? false : undefined}>
               <TooltipTrigger asChild onPointerDown={(e) => e.preventDefault()}>
                 <Button
