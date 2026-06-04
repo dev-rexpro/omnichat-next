@@ -6,7 +6,9 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { FieldGroup, Field, FieldLabel, FieldContent, FieldDescription, FieldError } from "@/components/ui/field"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 import { useAuth } from "@/hooks/use-auth"
 
@@ -47,9 +49,9 @@ export default function LoginPage() {
 
   return (
     <div className="w-full h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center justify-center text-center space-y-2">
-          <div className="w-12 h-12 bg-primary rounded-md flex items-center justify-center text-primary-foreground shadow-md">
+      <div className="w-full max-w-md gap-8 flex flex-col">
+        <div className="flex flex-col items-center justify-center text-center gap-2">
+          <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-primary-foreground shadow-md">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -65,50 +67,85 @@ export default function LoginPage() {
               <rect width="20" height="12" x="2" y="6" rx="2" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            {isLoginMode ? "Welcome back" : "Create an account"}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {isLoginMode ? "Enter your credentials to access your chats" : "Enter your details to get started"}
-          </p>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              {isLoginMode ? "Welcome back" : "Create an account"}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {isLoginMode ? "Enter your credentials to access your chats" : "Enter your details to get started"}
+            </p>
+          </div>
         </div>
 
-        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-          <div className="p-8">
-            <form onSubmit={handleAuth} className="space-y-4">
-              {!isLoginMode && (
-                <div className="space-y-2">
-                  <Label>Full Name</Label>
-                  <Input type="text" name="name" placeholder="John Doe" />
-                </div>
-              )}
+        <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
+          <div className="p-6 md:p-8">
+            <form onSubmit={handleAuth} className="w-full">
+              <FieldGroup className="gap-5">
+                {!isLoginMode && (
+                  <Field orientation="vertical">
+                    <FieldLabel htmlFor="name">Full Name</FieldLabel>
+                    <FieldContent>
+                      <Input 
+                        id="name"
+                        type="text" 
+                        name="name" 
+                        placeholder="John Doe" 
+                      />
+                    </FieldContent>
+                  </Field>
+                )}
 
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" name="email" placeholder="name@example.com" required />
-              </div>
+                <Field orientation="vertical">
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <FieldContent>
+                    <Input 
+                      id="email"
+                      type="email" 
+                      name="email" 
+                      placeholder="name@example.com" 
+                      required 
+                    />
+                  </FieldContent>
+                </Field>
 
-              <div className="space-y-2">
-                <Label>Password</Label>
-                <Input type="password" name="password" placeholder="••••••••" required />
-              </div>
+                <Field orientation="vertical">
+                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <FieldContent>
+                    <Input 
+                      id="password"
+                      type="password" 
+                      name="password" 
+                      placeholder="••••••••" 
+                      required 
+                    />
+                  </FieldContent>
+                </Field>
 
-              {authError && (
-                <div className="text-xs text-destructive font-medium bg-destructive/10 p-2 rounded">{authError}</div>
-              )}
+                {authError && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{authError}</AlertDescription>
+                  </Alert>
+                )}
 
-              <Button type="submit" className="w-full" disabled={authLoading}>
-                {authLoading ? "Processing..." : isLoginMode ? "Sign In" : "Sign Up"}
-              </Button>
+                <Button 
+                  type="submit" 
+                  className="w-full mt-2" 
+                  disabled={authLoading}
+                  size="lg"
+                >
+                  {authLoading ? "Processing..." : isLoginMode ? "Sign In" : "Sign Up"}
+                </Button>
+              </FieldGroup>
             </form>
           </div>
 
-          <div className="px-8 py-4 bg-muted/50 border-t border-border flex items-center justify-center">
-            <p className="text-xs text-muted-foreground">
-              <span>{isLoginMode ? "Don't have an account? " : "Already have an account? "}</span>
+          <div className="px-6 md:px-8 py-4 bg-muted/40 border-t border-border flex items-center justify-center">
+            <p className="text-sm text-muted-foreground">
+              <span>{isLoginMode ? "Don&apos;t have an account? " : "Already have an account? "}</span>
               <button
                 onClick={() => setIsLoginMode(!isLoginMode)}
-                className="text-primary font-medium hover:underline underline-offset-4 focus:outline-none"
+                className="text-primary font-semibold hover:underline underline-offset-4 focus:outline-none"
               >
                 {isLoginMode ? "Sign Up" : "Sign In"}
               </button>
@@ -116,10 +153,10 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground px-8">
+        <p className="text-center text-xs text-muted-foreground px-4">
           By clicking continue, you agree to our{" "}
-          <a href="#" className="underline hover:text-primary">Terms of Service</a> and{" "}
-          <a href="#" className="underline hover:text-primary">Privacy Policy</a>.
+          <a href="#" className="underline hover:text-primary transition-colors">Terms of Service</a> and{" "}
+          <a href="#" className="underline hover:text-primary transition-colors">Privacy Policy</a>.
         </p>
       </div>
     </div>

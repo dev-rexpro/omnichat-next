@@ -7,7 +7,7 @@ import { Providers } from "@/components/providers";
 import "./globals.css"
 import "katex/dist/katex.min.css"
 
-const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "500", "600"] })
+const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] })
 
 export const metadata: Metadata = {
   title: "Omnichat",
@@ -24,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} font-sans antialiased`}>
+    <html lang="en" suppressHydrationWarning className="scroll-smooth">
+      <body className={`${inter.className} font-sans antialiased bg-background text-foreground`}>
         <Providers>
           {children}
           <Analytics />

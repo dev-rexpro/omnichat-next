@@ -25,6 +25,8 @@ import { useChat } from "@/hooks/use-chat"
 import { useTokenCount } from "@/hooks/use-token-count"
 import { cn } from "@/lib/utils"
 import { RenameChatDialog } from "@/components/rename-chat-dialog"
+import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
 
 const GEMINI_MODELS = [
   { id: "gemini-3-pro-preview", name: "Gemini 3 Pro" },
@@ -125,66 +127,69 @@ export function ChatHeader({
 
   return (
     <>
-      <header className="h-14 flex flex-shrink-0 items-center justify-between px-3">
-        <div className="flex items-center gap-1 md:gap-3 text-foreground transition-all duration-300 min-w-0">
+      <header className="h-14 flex flex-shrink-0 items-center justify-between px-4 border-b border-border bg-card/50 backdrop-blur-sm">
+        <div className="flex items-center gap-2 md:gap-3 text-foreground transition-all duration-300 min-w-0 flex-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => toggleSidebar("left")}
-                className="p-2 flex-shrink-0 hover:bg-accent text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
               >
-                {isLeftOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
+                {isLeftOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right">
+            <TooltipContent side="bottom">
               <p>{isLeftOpen ? "Hide sidebar" : "Show sidebar"}</p>
             </TooltipContent>
           </Tooltip>
 
-          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+          <div className="flex items-center gap-3 min-w-0 overflow-hidden flex-1">
             <div className="flex items-center gap-2 overflow-hidden group">
-              <span className="font-semibold text-base truncate">{headerTitle}</span>
+              <span className="font-semibold text-sm md:text-base truncate text-foreground">{headerTitle}</span>
               {messages && messages.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsRenameDialogOpen(true)}
-                  className="h-7 w-7 p-1 hover:bg-muted transition-opacity bg-transparent flex-shrink-0"
-                >
-                  <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsRenameDialogOpen(true)}
+                      className="h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Rename</TooltipContent>
+                </Tooltip>
               )}
             </div>
 
             {messages && messages.length > 0 && (
-              <div className={cn(
-                "text-xs text-muted-foreground whitespace-nowrap px-2 flex items-center gap-1.5 transition-opacity duration-300",
-                isCountingTokens && "opacity-50"
-              )}>
-                <span className="h-1 w-1 rounded-full bg-border" />
-                {sessionTokens.toLocaleString()} tokens
+              <div className="hidden md:flex items-center gap-2 ml-auto text-xs text-muted-foreground">
+                <Separator orientation="vertical" className="h-4" />
+                <Badge variant="secondary" className="text-xs">
+                  {sessionTokens.toLocaleString()} tokens
+                </Badge>
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           {/* Conditional Rendering: Drawer for Mobile, Popover for Desktop */}
           {isMobile ? (
             <Drawer open={isModelDropdownOpen} onOpenChange={setIsModelDropdownOpen}>
               <DrawerTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-9 w-[200px] px-3 justify-between text-sm shadow-sm"
+                  className="h-8 w-[160px] px-3 justify-between text-xs"
                 >
                   <span className="font-medium truncate">{selectedModelName}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground opacity-50" />
                 </Button>
               </DrawerTrigger>
               <DrawerContent>
-                {/* Visually hidden title for screen reader accessibility */}
                 <DrawerTitle className="sr-only">Select a Model</DrawerTitle>
                 <div className="p-4">
                   <ModelList setSelectedModel={handleModelSelect} setOpen={setIsModelDropdownOpen} isImagesToolActive={settings.tools.images} />
@@ -198,13 +203,13 @@ export function ChatHeader({
                   variant="outline"
                   role="combobox"
                   aria-expanded={isModelDropdownOpen}
-                  className="h-9 w-[300px] px-3 justify-between text-sm shadow-sm"
+                  className="h-8 w-[280px] px-3 justify-between text-sm"
                 >
-                  <span className="font-medium">{selectedModelName}</span>
+                  <span className="font-medium truncate text-xs">{selectedModelName}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[300px] p-0">
+              <PopoverContent className="w-[280px] p-0">
                 <ModelList setSelectedModel={handleModelSelect} setOpen={setIsModelDropdownOpen} isImagesToolActive={settings.tools.images} />
               </PopoverContent>
             </Popover>
@@ -216,12 +221,12 @@ export function ChatHeader({
                 variant="ghost"
                 size="icon"
                 onClick={() => toggleSidebar("right")}
-                className="p-2 hover:bg-accent text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
               >
-                {isRightOpen ? <PanelRightClose className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
+                {isRightOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="left">
+            <TooltipContent side="bottom">
               <p>{isRightOpen ? "Hide options" : "Show options"}</p>
             </TooltipContent>
           </Tooltip>

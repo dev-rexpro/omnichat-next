@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { FieldGroup, Field, FieldLabel, FieldContent, FieldDescription } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 import { ChevronDown, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -55,110 +55,127 @@ export function GeneralPanel({
     const currentProviderConfig = providersConfig[selectedProvider] || Object.values(providersConfig)[0];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             <div>
-                <h3 className="font-semibold">Inference Provider</h3>
-                <p className="text-sm text-muted-foreground mt-1 mb-3">Provider may charge for usage.</p>
-                <div className="space-y-3">
-                    <div className="space-y-2">
-                        <Label className="text-xs">Provider</Label>
-                        <Popover open={providerDropdownOpen} onOpenChange={setProviderDropdownOpen}>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" role="combobox" aria-expanded={providerDropdownOpen} className="h-9 w-full justify-between">
-                                    <span>{currentProviderConfig?.name || "Select Provider"}</span>
-                                    <ChevronDown className="w-4 h-4 text-muted-foreground opacity-50" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                                <Command>
-                                    <CommandInput placeholder="Search provider..." />
-                                    <CommandList>
-                                        <CommandEmpty>No provider found.</CommandEmpty>
-                                        <CommandGroup>
-                                            {(Object.keys(providersConfig) as ProviderId[]).map((key) => (
-                                                <CommandItem key={key} value={key} onSelect={(currentValue) => { setSelectedProvider(currentValue as ProviderId); setProviderDropdownOpen(false); }}>
-                                                    {providersConfig[key].name}
-                                                </CommandItem>
-                                            ))}
-                                        </CommandGroup>
-                                    </CommandList>
-                                </Command>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
+                <div className="mb-4">
+                    <h3 className="font-semibold text-base">Inference Provider</h3>
+                    <p className="text-sm text-muted-foreground mt-1">Configure where your AI requests are processed.</p>
+                </div>
+                <FieldGroup className="gap-6">
+                    <Field orientation="vertical">
+                        <FieldLabel htmlFor="provider">Provider</FieldLabel>
+                        <FieldContent>
+                            <Popover open={providerDropdownOpen} onOpenChange={setProviderDropdownOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" role="combobox" aria-expanded={providerDropdownOpen} className="w-full justify-between">
+                                        <span>{currentProviderConfig?.name || "Select Provider"}</span>
+                                        <ChevronDown className="w-4 h-4 text-muted-foreground opacity-50" data-icon="inline-end" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Search provider..." />
+                                        <CommandList>
+                                            <CommandEmpty>No provider found.</CommandEmpty>
+                                            <CommandGroup>
+                                                {(Object.keys(providersConfig) as ProviderId[]).map((key) => (
+                                                    <CommandItem key={key} value={key} onSelect={(currentValue) => { setSelectedProvider(currentValue as ProviderId); setProviderDropdownOpen(false); }}>
+                                                        {providersConfig[key].name}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                            <FieldDescription>Select the AI provider for your inference.</FieldDescription>
+                        </FieldContent>
+                    </Field>
+
                     {selectedProvider !== 'google' && (
-                        <div className="space-y-2">
-                            <Label className="text-xs">Base URL</Label>
-                            <Input
-                                placeholder={currentProviderConfig?.baseUrl || ""}
-                                value={providerSettings[selectedProvider]?.baseUrl || ''}
-                                onChange={(e) => handleProviderSettingChange('baseUrl', e.target.value)}
-                                readOnly={!currentProviderConfig?.allowCustomBaseUrl}
-                                className={cn("h-9 text-sm", !currentProviderConfig?.allowCustomBaseUrl && 'bg-muted/50 cursor-not-allowed')}
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                {currentProviderConfig?.allowCustomBaseUrl ? "Set the Base URL if you are using a standalone server." : "This provider does not allow custom Base URLs."}
-                            </p>
-                        </div>
+                        <Field orientation="vertical">
+                            <FieldLabel htmlFor="baseurl">Base URL</FieldLabel>
+                            <FieldContent>
+                                <Input
+                                    id="baseurl"
+                                    placeholder={currentProviderConfig?.baseUrl || ""}
+                                    value={providerSettings[selectedProvider]?.baseUrl || ''}
+                                    onChange={(e) => handleProviderSettingChange('baseUrl', e.target.value)}
+                                    readOnly={!currentProviderConfig?.allowCustomBaseUrl}
+                                    className={cn(!currentProviderConfig?.allowCustomBaseUrl && 'bg-muted/50 cursor-not-allowed')}
+                                />
+                                <FieldDescription>
+                                    {currentProviderConfig?.allowCustomBaseUrl ? "Set the Base URL if using a standalone server." : "This provider does not allow custom Base URLs."}
+                                </FieldDescription>
+                            </FieldContent>
+                        </Field>
                     )}
+
                     {currentProviderConfig?.isKeyRequired && (
-                        <div className="space-y-2">
-                            <Label className="text-xs">API Key</Label>
-                            <Input
-                                type="password"
-                                placeholder="Enter your API key"
-                                value={providerSettings[selectedProvider]?.apiKey || ''}
-                                onChange={(e) => handleProviderSettingChange('apiKey', e.target.value)}
-                                className="h-9 text-sm"
-                            />
-                        </div>
+                        <Field orientation="vertical">
+                            <FieldLabel htmlFor="apikey">API Key</FieldLabel>
+                            <FieldContent>
+                                <Input
+                                    id="apikey"
+                                    type="password"
+                                    placeholder="Enter your API key"
+                                    value={providerSettings[selectedProvider]?.apiKey || ''}
+                                    onChange={(e) => handleProviderSettingChange('apiKey', e.target.value)}
+                                />
+                                <FieldDescription>Keep your API key secure. It&apos;s never shared.</FieldDescription>
+                            </FieldContent>
+                        </Field>
                     )}
-                    <div className="space-y-2">
-                        <Label className="text-xs">Model</Label>
-                        <Popover open={modelDropdownOpen} onOpenChange={setModelDropdownOpen}>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" role="combobox" aria-expanded={modelDropdownOpen} className="h-9 w-full justify-between">
-                                    <span className="truncate">
-                                        {selectedProvider === 'google'
-                                            ? (GEMINI_MODELS.find(m => m.id === selectedModel)?.name || selectedModel)
-                                            : selectedModel}
-                                    </span>
-                                    <ChevronDown className="w-4 h-4 text-muted-foreground opacity-50" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                                <Command>
-                                    <CommandInput placeholder="Search model..." />
-                                    <CommandList>
-                                        <CommandEmpty>No model found.</CommandEmpty>
-                                        <CommandGroup>
-                                            {selectedProvider === 'google' ? (
-                                                GEMINI_MODELS.map((model) => (
-                                                    <CommandItem key={model.id} value={model.id} onSelect={(currentValue) => { setSelectedModel(currentValue); setModelDropdownOpen(false); }}>
-                                                        {model.name}
-                                                    </CommandItem>
-                                                ))
-                                            ) : (
-                                                ['gpt-4o', 'gpt-4o-mini', 'o1-preview'].map((model) => (
-                                                    <CommandItem key={model} value={model} onSelect={(currentValue) => { setSelectedModel(currentValue); setModelDropdownOpen(false); }}>
-                                                        {model}
-                                                    </CommandItem>
-                                                ))
-                                            )}
-                                        </CommandGroup>
-                                    </CommandList>
-                                </Command>
-                            </PopoverContent>
-                        </Popover>
-                        <p className="text-xs text-muted-foreground">Set the inference model.</p>
-                    </div>
+
+                    <Field orientation="vertical">
+                        <FieldLabel htmlFor="model">Model</FieldLabel>
+                        <FieldContent>
+                            <Popover open={modelDropdownOpen} onOpenChange={setModelDropdownOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" role="combobox" aria-expanded={modelDropdownOpen} className="w-full justify-between">
+                                        <span className="truncate">
+                                            {selectedProvider === 'google'
+                                                ? (GEMINI_MODELS.find(m => m.id === selectedModel)?.name || selectedModel)
+                                                : selectedModel}
+                                        </span>
+                                        <ChevronDown className="w-4 h-4 text-muted-foreground opacity-50" data-icon="inline-end" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Search model..." />
+                                        <CommandList>
+                                            <CommandEmpty>No model found.</CommandEmpty>
+                                            <CommandGroup>
+                                                {selectedProvider === 'google' ? (
+                                                    GEMINI_MODELS.map((model) => (
+                                                        <CommandItem key={model.id} value={model.id} onSelect={(currentValue) => { setSelectedModel(currentValue); setModelDropdownOpen(false); }}>
+                                                            {model.name}
+                                                        </CommandItem>
+                                                    ))
+                                                ) : (
+                                                    ['gpt-4o', 'gpt-4o-mini', 'o1-preview'].map((model) => (
+                                                        <CommandItem key={model} value={model} onSelect={(currentValue) => { setSelectedModel(currentValue); setModelDropdownOpen(false); }}>
+                                                            {model}
+                                                        </CommandItem>
+                                                    ))
+                                                )}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                            <FieldDescription>Choose the AI model to use for this provider.</FieldDescription>
+                        </FieldContent>
+                    </Field>
+
                     {selectedProvider !== 'google' && (
-                        <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                            <RefreshCw className="w-3.5 h-3.5" />
+                        <Button variant="outline" className="gap-2 w-fit">
+                            <RefreshCw className="w-4 h-4" />
                             Fetch Models
                         </Button>
                     )}
-                </div>
+                </FieldGroup>
             </div>
         </div>
     )
