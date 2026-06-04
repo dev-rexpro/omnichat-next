@@ -200,7 +200,7 @@ export function LeftSidebar({
                   <TooltipContent side="right">Search</TooltipContent>
                 </Tooltip>
               </div>
-              <div className="flex-1 overflow-y-auto px-2 space-y-1 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 transition-colors">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 space-y-1 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 transition-colors">
                 {chats?.map((chat) => (
                   <div key={chat.id}>
                     <DropdownMenu open={openRecentMenu === chat.id} onOpenChange={(open) => setOpenRecentMenu(open ? chat.id : null)}>
