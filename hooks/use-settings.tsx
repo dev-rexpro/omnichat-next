@@ -115,6 +115,28 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setIsLoaded(true)
     }, [user])
 
+    // Provider-specific effects to cap maxOutputTokens based on provider limits
+    useEffect(() => {
+        if (!isLoaded) return;
+
+        const MAX_OUTPUT_TOKENS: Record<string, number> = {
+            groq: 8192,
+            "open-router": 8192,
+        };
+
+        const providerLimit = MAX_OUTPUT_TOKENS[settings.provider as string];
+        if (!providerLimit) return;
+
+        if (settings.advanced.maxOutputTokens > providerLimit) {
+            updateSettings({
+                advanced: {
+                    ...settings.advanced,
+                    maxOutputTokens: providerLimit,
+                },
+            });
+        }
+    }, [settings.provider, isLoaded])
+
     // Model-specific effects for Gemini
     useEffect(() => {
         if (!isLoaded || settings.provider !== "google") return;
