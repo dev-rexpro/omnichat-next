@@ -9,6 +9,7 @@ interface SettingsContextType {
     settings: Settings
     setSettings: React.Dispatch<React.SetStateAction<Settings>>
     updateSettings: (newSettings: Partial<Settings>) => void
+    updateFetchedModels: (provider: string, models: { id: string; name: string }[]) => void
     resetSettings: () => void
     resetSession: () => void
 }
@@ -42,6 +43,7 @@ const defaultSettings: Settings = {
     displayUserMessagesRaw: false,
     displayModelMessagesRaw: false,
     apiKeys: {},
+    fetchedModels: {},
     advanced: {
         stopSequences: [],
         maxOutputTokens: 2048,
@@ -194,6 +196,16 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setSettings((prev) => ({ ...prev, ...newSettings }))
     }
 
+    const updateFetchedModels = (provider: string, models: { id: string; name: string }[]) => {
+        setSettings((prev) => ({
+            ...prev,
+            fetchedModels: {
+                ...prev.fetchedModels,
+                [provider]: models,
+            },
+        }))
+    }
+
     const resetSettings = () => {
         setSettings(defaultSettings)
     }
@@ -211,7 +223,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     return (
-        <SettingsContext.Provider value={{ settings, setSettings, updateSettings, resetSettings, resetSession }}>
+        <SettingsContext.Provider value={{ settings, setSettings, updateSettings, updateFetchedModels, resetSettings, resetSession }}>
             {children}
         </SettingsContext.Provider>
     )
@@ -226,7 +238,8 @@ export const useSettings = () => {
         ...context,
         settings: {
             ...context.settings,
-            apiKeys: context.settings.apiKeys || {}
+            apiKeys: context.settings.apiKeys || {},
+            fetchedModels: context.settings.fetchedModels || {}
         }
     }
 }

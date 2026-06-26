@@ -79,12 +79,12 @@ export default function SettingsPage() {
   const [expandThinking, setExpandThinking] = useState(settings.expandThinking);
   const [excludeThinking, setExcludeThinking] = useState(settings.excludeThinkingOnSubmit);
   const [enablePythonInterpreter, setEnablePythonInterpreter] = useState(settings.enablePythonInterpreter);
-  const [adv, setAdv] = useState({
-    overrideGeneration: false, temperature: 0.8, top_k: 40, top_p: 0.95, min_p: 0.05, max_tokens: -1,
+const [adv, setAdv] = useState({
+    overrideGeneration: false, temperature: 0.8, top_k: 40, top_p: 0.95, min_p: 0.05, max_tokens: 2048,
     replaceSamplers: false, samplers: "ndkypmxl", dynatemp_range: 0, dynatemp_exponent: 1, typical_p: 1, xfc_probability: 0, xfc_threshold: 0.1,
     replacePenalties: false, repeat_last_n: 64, repeat_penalty: 1, presence_penalty: 0, frequency_penalty: 0, dry_multiplier: 0, dry_base: 1.75, dry_allowed_length: 2, dry_penalty_last_n: -1,
     customJson: ""
-  });
+});
 
   // All handlers are managed here
   const handleClose = () => {

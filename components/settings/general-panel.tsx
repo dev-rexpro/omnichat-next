@@ -1,16 +1,17 @@
-
+ 
 "use client"
 
 import type React from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { ChevronDown, RefreshCw } from "lucide-react"
+import { ChevronDown, RefreshCw, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import providersConfig from "@/config/inference-providers.json"
+import { useSettings } from "@/hooks/use-settings"
 
 const GEMINI_MODELS = [
     { id: "gemini-3-pro-preview", name: "Gemini 3 Pro" },
@@ -22,6 +23,11 @@ const GEMINI_MODELS = [
     { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite" },
     { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
     { id: "gemini-2.0-flash-lite", name: "Gemini 2.0 Flash Lite" },
+]
+
+const GEMINI_IMAGE_MODELS = [
+    { id: "gemini-3-pro-image-preview", name: "Nano Banana Pro (Gemini 3 Pro Image)" },
+    { id: "gemini-2.5-flash-image", name: "Nano Banana (Gemini 2.5 Flash Image)" },
 ]
 
 type ProviderId = keyof typeof providersConfig;
@@ -52,7 +58,74 @@ export function GeneralPanel({
     modelDropdownOpen,
     setModelDropdownOpen
 }: GeneralPanelProps) {
+    const { settings, updateFetchedModels } = useSettings();
     const currentProviderConfig = providersConfig[selectedProvider] || Object.values(providersConfig)[0];
+
+    const [isFetching, setIsFetching] = useState(false);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+
+    const fetchedModels = settings.fetchedModels?.[selectedProvider] || [];
+
+    const handleFetchModels = useCallback(async () => {
+        const apiKey = providerSettings[selectedProvider]?.apiKey;
+        const baseUrl = providerSettings[selectedProvider]?.baseUrl || currentProviderConfig?.baseUrl;
+
+        if (!apiKey && currentProviderConfig?.isKeyRequired) {
+            setFetchError('Please enter an API key first.');
+            return;
+        }
+
+        setIsFetching(true);
+        setFetchError(null);
+
+        try {
+            const response = await fetch('/api/models', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider: selectedProvider, baseUrl, apiKey: apiKey || '' }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || data.error) {
+                setFetchError(data.error || `Failed to fetch models (HTTP ${response.status})`);
+                return;
+            }
+
+            if (data.models && Array.isArray(data.models)) {
+                updateFetchedModels(selectedProvider, data.models);
+
+                if (data.models.length > 0 && !selectedModel) {
+                    setSelectedModel(data.models[0].id);
+                }
+            }
+        } catch (error: any) {
+            setFetchError(error.message || 'Failed to fetch models');
+        } finally {
+            setIsFetching(false);
+        }
+    }, [selectedProvider, providerSettings, currentProviderConfig, selectedModel, setSelectedModel, updateFetchedModels]);
+
+    useEffect(() => {
+        if (selectedProvider !== 'google' && fetchedModels.length > 0 && !selectedModel) {
+            setSelectedModel(fetchedModels[0].id);
+        }
+    }, [selectedProvider]);
+
+    useEffect(() => {
+        setFetchError(null);
+    }, [selectedProvider]);
+
+    const isGoogle = selectedProvider === 'google';
+    const modelsToShow = isGoogle
+        ? GEMINI_MODELS
+        : fetchedModels.length > 0
+            ? fetchedModels
+            : [];
+
+    const selectedModelName = isGoogle
+        ? GEMINI_MODELS.find(m => m.id === selectedModel)?.name || selectedModel
+        : fetchedModels.find(m => m.id === selectedModel)?.name || selectedModel;
 
     return (
         <div className="space-y-6">
@@ -119,9 +192,7 @@ export function GeneralPanel({
                             <PopoverTrigger asChild>
                                 <Button variant="outline" size="sm" role="combobox" aria-expanded={modelDropdownOpen} className="h-9 w-full justify-between">
                                     <span className="truncate">
-                                        {selectedProvider === 'google'
-                                            ? (GEMINI_MODELS.find(m => m.id === selectedModel)?.name || selectedModel)
-                                            : selectedModel}
+                                        {selectedModelName || (isGoogle ? 'Select a model' : 'No models fetched')}
                                     </span>
                                     <ChevronDown className="w-4 h-4 text-muted-foreground opacity-50" />
                                 </Button>
@@ -132,19 +203,11 @@ export function GeneralPanel({
                                     <CommandList>
                                         <CommandEmpty>No model found.</CommandEmpty>
                                         <CommandGroup>
-                                            {selectedProvider === 'google' ? (
-                                                GEMINI_MODELS.map((model) => (
-                                                    <CommandItem key={model.id} value={model.id} onSelect={(currentValue) => { setSelectedModel(currentValue); setModelDropdownOpen(false); }}>
-                                                        {model.name}
-                                                    </CommandItem>
-                                                ))
-                                            ) : (
-                                                ['gpt-4o', 'gpt-4o-mini', 'o1-preview'].map((model) => (
-                                                    <CommandItem key={model} value={model} onSelect={(currentValue) => { setSelectedModel(currentValue); setModelDropdownOpen(false); }}>
-                                                        {model}
-                                                    </CommandItem>
-                                                ))
-                                            )}
+                                            {modelsToShow.map((model) => (
+                                                <CommandItem key={model.id} value={model.id} onSelect={(currentValue) => { setSelectedModel(currentValue); setModelDropdownOpen(false); }}>
+                                                    {model.name}
+                                                </CommandItem>
+                                            ))}
                                         </CommandGroup>
                                     </CommandList>
                                 </Command>
@@ -153,10 +216,25 @@ export function GeneralPanel({
                         <p className="text-xs text-muted-foreground">Set the inference model.</p>
                     </div>
                     {selectedProvider !== 'google' && (
-                        <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                            <RefreshCw className="w-3.5 h-3.5" />
-                            Fetch Models
-                        </Button>
+                        <div className="space-y-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 bg-transparent w-full"
+                                onClick={handleFetchModels}
+                                disabled={isFetching}
+                            >
+                                {isFetching ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                    <RefreshCw className="w-3.5 h-3.5" />
+                                )}
+                                {isFetching ? 'Fetching...' : 'Fetch Models'}
+                            </Button>
+                            {fetchError && (
+                                <p className="text-xs text-red-500">{fetchError}</p>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>

@@ -29,6 +29,7 @@ export interface Settings {
   displayUserMessagesRaw: boolean;
   displayModelMessagesRaw: boolean;
   apiKeys: Record<string, string>;
+  fetchedModels: Record<string, { id: string; name: string }[]>;
   advanced: {
     stopSequences: string[];
     maxOutputTokens: number;
